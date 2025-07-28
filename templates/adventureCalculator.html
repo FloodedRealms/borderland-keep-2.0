@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    </head>
+    <body>
+        <header>
+        </header>
+        <nav>
+        </nav>
+        <main>
+            <section class="content">
+<form class="adventure-form" onsubmit="return false;">
+    {{ range .FormSections }}
+ <div>
+     {{ .RenderedForm }}
+ </div>
+    {{ end }}
+</form>
+            </section>
+        </main>
+    </body>
+</html>

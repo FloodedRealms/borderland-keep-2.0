@@ -1,0 +1,31 @@
+<fieldset>
+        <legend>
+            Coins
+        </legend>
+        <ol>
+            <li>
+                <label for="copper"  >Copper: </label> <input id="copper" hx-swap="none" hx-trigger="change"
+                hx-patch="/{{ .CalculationLink }}" type="text" name="copper"
+                    value="{{ .Copper}}" />
+            </li>
+            <li>
+                <label for="silver" >Silver: </label> <input type="text" name="silver"
+                    value="{{ .Silver}}" id="silver" hx-swap="none" hx-trigger="change"
+                hx-patch="/{{ .CalculationLink }}"  />
+            </li>
+            <li>
+                <label for="electrum"  >Electrum: </label> <input type="text" name="electrum"
+                    value="{{ .Electrum}}" id="electrum" hx-swap="none" hx-trigger="change"
+                hx-patch="/{{ .CalculationLink }}" />
+            </li>
+            <li>
+                <label for="gold">Gold: </label> <input id="gold" hx-swap="none" hx-trigger="change"
+                hx-patch="/{{ .CalculationLink }}"  type="text" name="gold" value="{{ .Gold }}" />
+            </li>
+            <li>
+                <label for="platinum" >Platinum: </label> <input id="platinum" hx-swap="none" hx-trigger="change"
+                hx-patch="/{{ .CalculationLink }}"  type="text" name="platinum"
+                    value="{{ .Platinum }}" />
+            </li>
+        </ol>
+</fieldset>

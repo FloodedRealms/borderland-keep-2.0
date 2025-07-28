@@ -1,6 +1,9 @@
 package gamesystems
 
-import "math"
+import (
+	"html/template"
+	"math"
+)
 
 var goldValueLookupTable = []float64{0.01, 0.1, 0.5, 1, 5}
 
@@ -22,7 +25,7 @@ func calculateNumberOfShares(players, henchmen int) float64 {
 }
 
 func calculateXPShareAmount(shares float64, copper, silver, electrum, gold, platinum, totalJewelryValue, totalGemValue, totalMagicItemApparentValue, totalMagicItemSoldValue,
-totalCombatXP int) (fullShare, halfShare float64) {
+	totalCombatXP int) (fullShare, halfShare float64) {
 	copperGoldValue := copperToGold(copper)
 	silverGoldValue := silverToGold(silver)
 	electrumGoldValue := electrumToGold(electrum)
@@ -44,6 +47,43 @@ func calculateGoldShareAmount(shares float64, copper, silver, electrum, gold, pl
 	return fullShare, halfShare
 }
 
-func GetInputForm() struct {
-	return form
+type FormSection struct {
+	RenderedForm template.HTML
+}
+type ACKSIIForm struct {
+	FormSections []FormSection
+}
+func GetACKSIIInputForm() (*ACKSIIForm, error) {
+	type coinSectionData struct {
+		Copper int
+		Silver int
+		Electrum int
+		Gold int
+		Platinum int
+		CalculationLink string
+	}
+	coinData := coinSectionData{
+			Copper: 0,
+			Silver: 0,
+			Electrum: 0,
+			Gold: 0,
+			Platinum: 0,
+		    CalculationLink: "/ACKSII/Coins",
+		}
+
+	renderedCoinSection, err := renderTemplateWithData("/game-systems/templates/ACKSII", "coinFormSection", coinData)
+	if err != nil {
+		return nil, err
+	}
+	CoinSection := FormSection{
+		RenderedForm: template.HTML(renderedCoinSection),
+	}
+
+	Form := ACKSIIForm {
+		FormSections: []FormSection{
+			CoinSection,
+		},
+		}
+
+	return &Form, nil
 }
