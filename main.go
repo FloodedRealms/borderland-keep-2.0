@@ -11,7 +11,7 @@ func main() {
 		//Turn on renderer for webpages (will panic if templates are wrong)
 
 		//pages
-	calculatorPages := PageAdventureCalculator{}
+		calculatorPages := PageAdventureCalculator{}
 
 		//router
 		router := http.NewServeMux()
@@ -20,7 +20,7 @@ func main() {
 		// router.HandleFunc(" GET /user/validate", userApi.ValidateClient)
 
 		// static
-		calculatorPages.RegisterRoutes(router,)
+		calculatorPages.RegisterRoutes(router)
 
 		//User Pages
 
