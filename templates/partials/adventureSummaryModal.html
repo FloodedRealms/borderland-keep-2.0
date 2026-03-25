@@ -1,0 +1,49 @@
+<div id="modal" _="on closeModal add .closing then wait for animationend then remove me">
+	<div class="modal-underlay" _="on click trigger closeModal"></div>
+	<div class="modal-content">
+		<h1>Summary</h1>
+        <pre>
+       **Sesion # - Title**
+        Number of Playes: {{ .PlayerCount }}
+        Number of Henchmen: {{ .HenchCount }}
+        Number of Shares: {{ .Shares }}
+
+        **XP Share**
+        Player: {{ .PlayerXP }}
+        Henchmen: {{ .HenchXP }}
+
+        **GP Share Value**
+        Player: {{ .PlayerGP }}
+        Henchmen: {{ .HenchGP }}
+
+        **Coinage Break Down**
+        *Player - {{ .PlayerCoinValue }}:*
+            Copper: {{ .PCP }}
+            Silver: {{ .PSP }}
+            Electrum: {{ .PEP }}
+            Gold: {{ .PGP }}
+            Platinum:{{ .PPP }}
+        *Henchmen - {{ .HenchCoinValue }}:*
+            Copper: {{ .HCP }}
+            Silver: {{ .HSP }}
+            Electrum: {{ .HEP }}
+            Gold: {{ .HGP }}
+            Platinum:{{ .HPP }}
+
+       Player Special Treasure and Magic Item Share Value: {{ .PlayerSpecialTreasure }}
+       Henchmen Special Treasure Share and Magic Item Value (Unpaid Wages): {{ .HenchSpecialTreasure }}
+    **Special Treasure**
+     {{ range .SpecialTreasures }}
+        {{ .Number }} {{ .Name }}, {{ .GPValue }} GP each - {{ .TotalValue }} GP [Unclaimed]
+     {{ end}}
+    **Magic Items**
+     {{ range .MagicItems }}
+        {{ .Name }}, {{ .ApparentValue }} GP {{ if eq .IsSold true  }} [Sold] {{ .SellValue }} GP {{ else }} [Unclaimed] {{ end }}
+     {{ end}}
+
+        </pre>
+		<br>
+		<br>
+		<button class="btn danger" _="on click trigger closeModal">Close</button>
+	</div>
+</div>

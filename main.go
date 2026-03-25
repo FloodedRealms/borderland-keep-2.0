@@ -8,29 +8,46 @@ import (
 func main() {
 
 
-		//Turn on renderer for webpages (will panic if templates are wrong)
+	//pages
+	calculatorPage := NewPageAdventureCalculator()
 
-		//pages
-		calculatorPages := PageAdventureCalculator{}
+	staticRenderer := *NewRenderer()
+	//router
+	router := http.NewServeMux()
 
-		//router
-		router := http.NewServeMux()
+	fs := http.FileServer(http.Dir("./static"))
+	router.Handle("/static/", http.StripPrefix("/static/", fs))
 
-		// USER
-		// router.HandleFunc(" GET /user/validate", userApi.ValidateClient)
+	// "Static" pages
 
-		// static
-		calculatorPages.RegisterRoutes(router)
+	router.Handle("/", renderStaticPage("index.html", staticRenderer))
+	router.Handle("/index",  renderStaticPage("index.html", staticRenderer))
+	router.Handle("/dicegoblin",  renderStaticPage("dicegoblin.html", staticRenderer))
+	router.Handle("/legal",  renderStaticPage("legal.html", staticRenderer))
+	// Tool Pages
+	calculatorPage.RegisterRoutes(router)
 
-		//User Pages
+	//User Pages
 
-		server := &http.Server{
-			Addr:    ":9090",
-			Handler: router,
+	server := &http.Server{
+		Addr:    ":9090",
+		Handler: router,
+	}
+	log.Print("Listening on 9090")
+	for {
+		server.ListenAndServe()
+		log.Print("Server crash... attempting restart")
+	}
+}
+
+func renderStaticPage(pageName string, pr Renderer) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request) {
+		renderedPage, err := pr.RenderPage(pageName, nil)
+		if err != nil {
+			log.Printf("Error rendering Static Page %s: %v\n", pageName, err)
+			w.Header().Add("hx-redirect", "/error")
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		log.Print("Listening on 9090")
-		for {
-			server.ListenAndServe()
-			log.Print("Server crash... attempting restart")
-		}
+		w.Write([]byte(renderedPage))
+	}
 }

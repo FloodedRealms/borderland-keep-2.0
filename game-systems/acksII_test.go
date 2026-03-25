@@ -4,7 +4,28 @@ import (
 	"testing"
 )
 
+
+func Treasure() ([][]int, []bool) {
+		var coins = []int{ // Total 1000
+		10000, // 100 Gold in Copper
+		1000,   // 100 Gold in Silver
+		200,   // 100 Gold in Electrum
+		100,   // 100 Gold
+		20,    // 100 Gold in Platinum
+	}
+	var stn = []int{1, 2, 5}
+	var stv = []int{50, 25, 20} // This represents 1 50 GP, 2 25 GP amd 5 20 GP special treasures ones
+	var cbn = []int{1, 7, 3}
+	var cbv = []int{15, 10, 5} // This represents 1 15 XP, 7 10 XP and 3 5 XP Combats
+	var mgav = []int{50, 50}
+	var mgsp = []int{1000, 100}
+	var mgis = []bool{false, true}
+
+	return [][]int{coins, stn, stv, cbn, cbv, mgav, mgsp}, mgis
+	}
+
 func TestGoldConversions(t *testing.T) {
+	a := NewACKSII()
 	var tests = []struct{
 		name string
 		coin string
@@ -27,13 +48,13 @@ func TestGoldConversions(t *testing.T) {
 			ans := -1
 			switch (tt.coin) {
 			case "copper":
-				ans = copperToGold(tt.input)
+				ans = a.copperToGold(tt.input)
 			case "silver":
-				ans = silverToGold(tt.input)
+				ans = a.silverToGold(tt.input)
 			case "electrum":
-				ans = electrumToGold(tt.input)
+				ans = a.electrumToGold(tt.input)
 			case "platinum":
-				ans =platinumToGold(tt.input)
+				ans =a.platinumToGold(tt.input)
 			}
 			if ans != tt.want {
 				t.Errorf("Got: %d\tWanted: %d\n", ans, tt.want)
@@ -42,26 +63,29 @@ func TestGoldConversions(t *testing.T) {
 	}
 }
 
-func TestXPCalculation(t *testing.T) {
-	var treasure = []int{ // Total 1000
-		10000, // 100 Gold in Copper
-		1000,   // 100 Gold in Silver
-		200,   // 100 Gold in Electrum
-		100,   // 100 Gold
-		20,    // 100 Gold in Platinum
-		100,   // Jewelery
-		100,   // Gems
-		100,   // Magic Items
-		100,   // Magic Items Sold
-		100,   // Combat XP
+func TestMagicItemGPCalulation(t *testing.T) {
+	a := NewACKSII()
+
+	treasure, mgis := Treasure()
+	magicItemGPValue := a.CalculateTotalGPFromMagicItems(treasure[5], treasure[6], mgis)
+	expectedMagicItemValue := 200.0
+
+	if  magicItemGPValue != float64(expectedMagicItemValue) {
+		t.Errorf("Wrong Magic Item Value Got: %f\tWanted: %f\n", magicItemGPValue, expectedMagicItemValue)
 	}
+
+}
+
+func TestXPCalculation(t *testing.T) {
+	a := NewACKSII()
+	treasure, mgis := Treasure()
 	var tests = []struct {
 		name string
 		players int
 		henchmen int
 		expShareNumber float64
-		expFullShare float64
-		expHalfShare float64
+		expFullShare int
+		expHalfShare int
 	}{
 		{"5 Players", 5, 0, 5.0,200, 100},
 		{"3 Players, 2 Henchmen", 3, 2, 4.0, 250, 125},
@@ -69,43 +93,33 @@ func TestXPCalculation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T){
-			numberShares := calculateNumberOfShares(tt.players, tt.henchmen)
+			numberShares := a.CalculateNumberOfShares(tt.players, tt.henchmen)
 
 			if (numberShares != tt.expShareNumber) {
 				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
 				return //no need to check calculation.
 			}
-			fShare, hShare := calculateXPShareAmount(numberShares, treasure[0], treasure[1], treasure[2], treasure[3], treasure[4], treasure[5], treasure[6], treasure[7], treasure[8], treasure[9])
+			fShare, hShare := a.CalculateXPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], treasure[2], treasure[3], treasure[4], treasure[5], treasure[6], mgis )
 			if fShare != tt.expFullShare {
-				t.Errorf("Wrong Full Share Got: %f\tWanted: %f\n", fShare, tt.expFullShare)
+				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
 			}
 			if hShare != tt.expHalfShare {
-				t.Errorf("Wrong Half Share Got: %f\tWanted: %f\n", hShare, tt.expHalfShare)
+				t.Errorf("Wrong Half Share Got: %d\tWanted: %d\n", hShare, tt.expHalfShare)
 			}
 		})
 	}
-
 }
 
 func TestGoldCalculation(t *testing.T) {
-	var treasure = []int{ // Total 1000
-		10000, // 100 Gold in Copper
-		1000,   // 100 Gold in Silver
-		200,   // 100 Gold in Electrum
-		100,   // 100 Gold
-		20,    // 100 Gold in Platinum
-		100,   // Jewelery
-		100,   // Gems
-		100,   // Magic Items
-		100,   // Magic Items Sold
-	}
+	a := NewACKSII()
+	treasure, mgis := Treasure()
 	var tests = []struct {
 		name string
 		players int
 		henchmen int
 		expShareNumber float64
-		expFullShare float64
-		expHalfShare float64
+		expFullShare int
+		expHalfShare int
 	}{
 		{"5 Players", 5, 0, 5.0, 180, 90},
 		{"3 Players, 2 Henchmen", 3, 2, 4.0, 225, 112},
@@ -113,18 +127,58 @@ func TestGoldCalculation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T){
-			numberShares := calculateNumberOfShares(tt.players, tt.henchmen)
+			numberShares := a.CalculateNumberOfShares(tt.players, tt.henchmen)
 
 			if (numberShares != tt.expShareNumber) {
 				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
 				return //no need to check calculation.
 			}
-			fShare, hShare := calculateGoldShareAmount(numberShares, treasure[0], treasure[1], treasure[2], treasure[3], treasure[4], treasure[5], treasure[6], treasure[7], treasure[8])
+			fShare, hShare := a.CalculateGPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], treasure[2], treasure[5], treasure[6], mgis )
+
 			if fShare != tt.expFullShare {
-				t.Errorf("Wrong Full Share Got: %f\tWanted: %f\n", fShare, tt.expFullShare)
+				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
 			}
 			if hShare != tt.expHalfShare {
-				t.Errorf("Wrong Half Share Got: %f\tWanted: %f\n", hShare, tt.expHalfShare)
+				t.Errorf("Wrong Half Share Got: %d\tWanted: %d\n", hShare, tt.expHalfShare)
+			}
+		})
+	}
+
+}
+
+
+func TestForLargeValueBug (t *testing.T) {
+	a := NewACKSII()
+	treasure, mgis := Treasure()
+	treasure[0][4] = 1000 // makes total XP 5980
+	var tests = []struct {
+		name string
+		players int
+		henchmen int
+		expShareNumber float64
+		expFullShare int
+		expHalfShare int
+	}{
+		{"5 Players", 5, 0, 5.0, 1160, 580},
+		{"2 Players", 2, 0, 2.0, 2900, 1450},
+		{"3 Players, 2 Henchmen", 3, 2, 4.0, 1450, 725},
+		{"3 Players, 1 Henchmen", 3, 1, 3.5, 1657, 828},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T){
+			numberShares := a.CalculateNumberOfShares(tt.players, tt.henchmen)
+
+			if (numberShares != tt.expShareNumber) {
+				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
+				return //no need to check calculation.
+			}
+			fShare, hShare := a.CalculateGPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], treasure[2], treasure[5], treasure[6], mgis )
+
+			if fShare != tt.expFullShare {
+				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
+			}
+			if hShare != tt.expHalfShare {
+				t.Errorf("Wrong Half Share Got: %d\tWanted: %d\n", hShare, tt.expHalfShare)
 			}
 		})
 	}

@@ -1,0 +1,50 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>The Keep on the Internet</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            {{ template "includes.html" }}
+    </head>
+    <body>
+        <header>
+            {{ template "banner.html" }}
+            {{ template "nav.html" }}
+        </header>
+        <div class="container">
+            <main>
+                <section>
+                <p>Welome to the landing page for Borderland Keep dot com. Borderland Keep dot com is a project to bring a series of services online for TTRPG groups to use in lieu of other services that might not be a good fit.
+                    The first of these services is a <a href="https://matrix.org">matrix homeserver</a> for those who wish to migrate their discord group to something a little more privacy respecting. </p>
+                    If you would like to know more, please go to a service's page. </p>
+                </section>
+                <section>
+                    <hgroup>
+                        <h4>Matrix Homeserver - Status: <div id="matrix-status" class="status-badge status-checking"></div></h4>
+                        <p>The Matrix homeserver, served from tavern.borderlandkeep.com, is intended for
+                    </hgroup>
+                </section>
+            </main>
+            <aside>
+                <a href="/dicegoblin">Visit the Dice Goblin</a>
+            </aside>
+        </div>
+<!--        <footer>
+            <div class="toggle-widget">
+                <span class="toggle-hint" id="current-theme-hint">Change ye color</span>
+                <div class="toggle-row">
+                    <span class="toggle-label" id="label-dark"><img src="assets/images/mana.black.gif"></span>
+                    <label class="toggle" aria-label="Toggle theme">
+                        <input type="checkbox" id="theme-toggle" />
+                        <span class="toggle-knob"><img src="assets/images/aniarm.gif"></span>
+                    </label>
+                    <span class="toggle-label" id="label-light"><img src="assets/images/mana.white.gif"></span>
+                </div>
+            </div>
+        </footer> -->
+        <script src="/static/scripts/toggle-theme.js"></script>
+        <script src="/static/scripts/check-services.js"></script>
+    </body>
+</html>

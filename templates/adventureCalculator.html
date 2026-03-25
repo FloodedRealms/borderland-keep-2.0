@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>Adventure Editor</title>
+        {{ template "includes.html" }}
+
+        <link rel="stylesheet" href="/static/css/ledger.css">
     </head>
     <body>
-        <header>
+        <header class="page-header">
+            {{ template "banner.html" }}
+            {{ template "nav.html" }}
+            <h1>Adventure XP and Payment Calculator</h2>
+            <p>Pay yer men what they're owed!<p>
         </header>
-        <nav>
-        </nav>
-        <main>
-            <section class="content">
-<form class="adventure-form" onsubmit="return false;">
-    {{ range .FormSections }}
- <div>
-     {{ .RenderedForm }}
- </div>
-    {{ end }}
-</form>
-            </section>
-        </main>
+        {{ template "calculatorForm.html" . }}
+        <div id="calculator-modals"
+        class="modal modal-blur fade"
+        style="display: none"
+        aria-hidden="false"
+        tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                <div class="modal-content"></div>
+            </div>
+        </div>
     </body>
 </html>
