@@ -1,6 +1,9 @@
 package gamesystems
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 
 type GameSystem interface {
@@ -31,4 +34,28 @@ func LoadGameSystem(systemName string) (GameSystem, error) {
 		return NewACKSII(), nil
 	}
 	return nil,  SystemNotFoundError{ Msg: fmt.Sprintf("System %s not found!", systemName)}
+}
+
+func RollDice(faces int) int {
+	if faces < 2 {
+		return 0
+	}
+	return rand.Intn(faces) + 1
+}
+
+func RollMultipleDice(count, faces int) []int {
+	results := make([]int, count)
+	for i := range results {
+		results[i] = RollDice(faces)
+	}
+	return results
+}
+
+// Sum adds up a slice of roll results
+func Sum(rolls []int) int {
+	total := 0
+	for _, r := range rolls {
+		total += r
+	}
+	return total
 }
