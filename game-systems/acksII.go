@@ -62,9 +62,9 @@ func (a ACKSII) CalculateDetailedCoinage(shares float64, copper, silver, electru
 	//copperAmount, silverAmount, electrumAmount, goldAmount, platinumAmount := 0.0,0.0,0.0,0.0,0.0
 	platinumAmount := math.Floor(float64(platinum) / shares)
 	goldAmount := math.Floor(float64(gold) / shares)
-	electrumAmount := math.Floor(float64(electrum) / shares) + tenthsRemainder(platinumAmount, shares)
-	silverAmount := math.Floor(float64(silver) / shares) + tenthsRemainder(goldAmount, shares)
-	copperAmount := math.Floor(float64(copper) / shares) + tenthsRemainder(silverAmount, shares) + (5.0 * tenthsRemainder(electrumAmount, shares)) + hundredthsRemainder(goldAmount, shares) + (5.0 * hundredthsRemainder(platinumAmount, shares))
+	electrumAmount := math.Floor(float64(electrum) / shares) + tenthsRemainder(float64(platinum), shares)
+	silverAmount := math.Floor(float64(silver) / shares) + tenthsRemainder(float64(gold), shares)
+	copperAmount := math.Floor(float64(copper) / shares) + tenthsRemainder(float64(silver), shares) + (5.0 * tenthsRemainder(float64(electrum), shares)) + hundredthsRemainder(float64(gold), shares) + (5.0 * hundredthsRemainder(float64(platinum), shares))
 
 	return []int{int(copperAmount), int(copperAmount * a.henchmenShare), int(silverAmount), int(silverAmount * a.henchmenShare), int(electrumAmount), int(electrumAmount * a.henchmenShare), int(goldAmount), int(goldAmount * a.henchmenShare), int(platinumAmount), int(platinumAmount * a.henchmenShare)}
 }

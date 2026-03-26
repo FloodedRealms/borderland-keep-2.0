@@ -66,7 +66,7 @@
                         <label for="treasure-collected-{{ $id }}"  class="editor-label">Treasure Collected: </label> <input id="treasure-collected-{{ $id }}"  type="text" name="treasure-collected-{{ $id }}" class="text-input"
                                                                       hx-trigger="change" hx-target="#calculator" hx-patch="/tools/calculator/special-treasure/{{ $id }}"
                                                                       value="{{ $treasure.Number }}" />
-                        <button type="button" class="delete-button"
+                        <button type="button" class="danger-button"
                                 hx-trigger="mousedown" hx-target="#calculator" hx-delete="/tools/calculator/special-treasure/{{ $id }}"> Delete</button>
                     </li>
                     {{ end }}
@@ -90,7 +90,7 @@
                         <label for="combat-defeated-{{ $id }}"  class="editor-label">Number Defeated: </label> <input id="combat-defeated-{{ $id }}"  type="text" name="combat-defeated-{{ $id }}" class="text-input"
                                                                       hx-trigger="change" hx-target="#calculator" hx-patch="/tools/calculator/combat/{{ $id }}"
                                                                       value="{{ $combat.NumberDefeated }}" />
-                        <button type="button" class="delete-button"
+                        <button type="button" class="danger-button"
                                 hx-trigger="mousedown" hx-target="#calculator" hx-delete="/tools/calculator/combat/{{ $id }}"> Delete</button>
                     </li>
                     {{ end }}
@@ -117,7 +117,7 @@
                         <label for="mi-sell-value-{{ $id }}" class="editor-label">Sell Price:</label> <input id="mi-sell-value-{{ $id }}"  type="text" name="mi-sell-value-{{ $id }}" class="text-input"
                                                                       hx-trigger="change" hx-target="#calculator" hx-patch="/tools/calculator/magic-item/{{ $id }}"
                                                                       value="{{ $item.SellValue }}" {{ if eq $item.IsSold false }} value=0 readonly {{ end }} />
-                        <button type="button" class="delete-button"
+                        <button type="button" class="danger-button"
                                 hx-trigger="mousedown" hx-target="#calculator" hx-delete="/tools/calculator/magic-item/{{ $id }}"> Delete</button>
                     </li>
                     {{ end }}
@@ -144,16 +144,8 @@
                     <dt>Player XP Share<dt>
                     <dd> {{ .FullXPShare }}</dd>
                 </dl>
-                <button class="modal-open-button"
+                <button class="modal-open-button confirm-button"
                         hx-get="/tools/calculator/summary" hx-target="body" hx-swap="beforeend">Verily!</button>
-            </div>
-            <div>
-                <span>Errors</span>
-                <ul>
-                    {{ range .Errors }}
-                    <li> {{ . }} </li>
-                    {{ end }}
-                </ul>
             </div>
     </section>
 </main>
