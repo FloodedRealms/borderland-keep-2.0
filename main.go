@@ -1,9 +1,89 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"sync"
+	"time"
+
+	"github.com/google/uuid"
 )
+
+type Session struct {
+	Id string
+	LastSeen time.Time
+}
+
+var (
+	sessions = make(map[string]*Session)
+	sessionMu sync.RWMutex
+)
+
+type contextKey string
+const sessionKey contextKey = "session"
+
+func generateSessionID() string {
+	return uuid.NewString()
+}
+
+func cleanupSessions(interval, maxAge time.Duration) {
+    ticker := time.NewTicker(interval)
+    for range ticker.C {
+        cutoff := time.Now().Add(-maxAge)
+        sessionMu.Lock()
+        for id, s := range sessions {
+            if s.LastSeen.Before(cutoff) {
+                delete(sessions, id)
+            }
+        }
+        sessionMu.Unlock()
+    }
+}
+
+func getSession(r *http.Request) (string, *Session) {
+    cookie, err := r.Cookie("session_id")
+
+    if err == nil {
+        sessionMu.RLock()
+        session, exists := sessions[cookie.Value]
+        sessionMu.RUnlock()
+        if exists {
+            session.LastSeen = time.Now()
+            return cookie.Value, session
+        }
+    }
+
+    // No valid session — create one
+    id := generateSessionID()
+    session := &Session{LastSeen: time.Now(), Id: id}
+    sessionMu.Lock()
+    sessions[id] = session
+    sessionMu.Unlock()
+    return id, session
+}
+
+func sessionMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        sessionID, session := getSession(r)
+
+        http.SetCookie(w, &http.Cookie{
+            Name:     "session_id",
+            Value:    sessionID,
+            HttpOnly: true,
+            Path:     "/",
+        })
+
+        // Attach session to the request context
+        ctx := context.WithValue(r.Context(), sessionKey, session)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+
+func getSessionFromCtx(r *http.Request) *Session {
+    session, _ := r.Context().Value(sessionKey).(*Session)
+    return session
+}
 
 func main() {
 
@@ -31,7 +111,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    ":9090",
-		Handler: router,
+		Handler: sessionMiddleware(router),
 	}
 	log.Print("Listening on 9090")
 	for {

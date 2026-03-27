@@ -108,13 +108,13 @@
                         <label for="mi-name-{{ $id }}" class="editor-label">Magic Item Name:</label> <input id="mi-name-{{ $id }}"  type="text" name="mi-name-{{ $id }}" class="text-input"
                                                                       hx-trigger="change" hx-target="#calculator" hx-patch="/tools/calculator/magic-item/{{ $id }}"
                                                                       value="{{ $item.Name }}" />
-                        <label for="mi-apparent-value-{{ $id }}" class="editor-label" >Apparent Value:</label> <input id="mi-apparent-value-{{ $id }}"  type="text" name="mi-apparent-value-{{ $id }}" class="text-input"
+                        <label for="mi-apparent-{{ $id }}" class="editor-label" >Apparent Value:</label> <input id="mi-apparent-value-{{ $id }}"  type="text" name="mi-apparent-value-{{ $id }}" class="text-input"
                                                                       hx-trigger="change" hx-target="#calculator" hx-patch="/tools/calculator/magic-item/{{ $id }}"
                                                                       value="{{ $item.ApparentValue }}" />
-                        <label for="mi-is-sold-{{ $id }}" class="editor-label">Sold without use?</label> <input id="mi-is-sold-{{ $id }}"  type="checkbox" name="mi-is-sold-{{ $id }}" class="checkbox-input"
+                        <label for="mi-sold-{{ $id }}" class="editor-label">Sold without use?</label> <input id="mi-is-sold-{{ $id }}"  type="checkbox" name="mi-is-sold-{{ $id }}" class="checkbox-input"
                                                                       hx-trigger="change" hx-target="#calculator" hx-patch="/tools/calculator/magic-item/{{ $id }}"
                                                                        value="true" {{ if eq $item.IsSold true }} checked {{ end }} />
-                        <label for="mi-sell-value-{{ $id }}" class="editor-label">Sell Price:</label> <input id="mi-sell-value-{{ $id }}"  type="text" name="mi-sell-value-{{ $id }}" class="text-input"
+                        <label for="mi-sell-{{ $id }}" class="editor-label">Sell Price:</label> <input id="mi-sell-value-{{ $id }}"  type="text" name="mi-sell-value-{{ $id }}" class="text-input"
                                                                       hx-trigger="change" hx-target="#calculator" hx-patch="/tools/calculator/magic-item/{{ $id }}"
                                                                       value="{{ $item.SellValue }}" {{ if eq $item.IsSold false }} value=0 readonly {{ end }} />
                         <button type="button" class="danger-button"
