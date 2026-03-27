@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"sync"
 
 	gamesystems "github.com/FloodedRealms/borderland-keep-2.0/game-systems"
 )
@@ -275,6 +276,8 @@ type PageAdventureCalculator struct {
 	adventures map[string]*Adventure
 	currentSystem string
 	renderer *Renderer
+	mu *sync.RWMutex
+
 }
 
 func (a Adventure) SpecialTreasureArrays() (numberRetrieved, value []int) {
@@ -315,6 +318,7 @@ func NewPageAdventureCalculator() *PageAdventureCalculator {
 		adventures: map[string]*Adventure{},
 		renderer: NewRenderer(),
 		currentSystem: "ACKS II",
+		mu: &sync.RWMutex{},
 	}
 }
 
@@ -354,8 +358,16 @@ func (p PageAdventureCalculator) addAventureToContext(next http.Handler) http.Ha
 }
 
 func (p PageAdventureCalculator) getAdventureFromContext (r *http.Request) *Adventure {
+	p.mu.RLock()
 	a, _ := r.Context().Value(adventureKey).(*Adventure)
+	p.mu.RUnlock()
 	return a
+}
+
+func (p *PageAdventureCalculator) CleanupSessionData(sessionId string) {
+	p.mu.Lock()
+	delete(p.adventures, sessionId)
+	p.mu.Unlock()
 }
 
 func (p PageAdventureCalculator) index(pr Renderer) http.HandlerFunc {
