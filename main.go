@@ -27,7 +27,11 @@ func generateSessionID() string {
 	return uuid.NewString()
 }
 
-func cleanupSessions(interval, maxAge time.Duration) {
+type SessionDataUser interface {
+	CleanupSessionData(string)
+}
+
+func cleanupSessions(interval, maxAge time.Duration, consumers []SessionDataUser) {
     ticker := time.NewTicker(interval)
     for range ticker.C {
         cutoff := time.Now().Add(-maxAge)
@@ -35,6 +39,9 @@ func cleanupSessions(interval, maxAge time.Duration) {
         for id, s := range sessions {
             if s.LastSeen.Before(cutoff) {
                 delete(sessions, id)
+				for _, c := range consumers {
+					c.CleanupSessionData(id)
+				}
             }
         }
         sessionMu.Unlock()
@@ -88,9 +95,12 @@ func getSessionFromCtx(r *http.Request) *Session {
 func main() {
 
 
+	sessionMu = sync.RWMutex{}
 	//pages
 	calculatorPage := NewPageAdventureCalculator()
 
+
+	go cleanupSessions(10*time.Minute, 1*time.Hour, []SessionDataUser{calculatorPage})
 	staticRenderer := *NewRenderer()
 	//router
 	router := http.NewServeMux()
