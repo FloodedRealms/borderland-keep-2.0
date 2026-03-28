@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The Printable Weather</title>
+    </head>
+    <body>
+        {{ if eq .Valid true }}
+
+        Koppen Code: {{ .Koppen }}
+        Season: {{ .Season }}
+        Previaling Wind: {{ .PrevailingWind }}
+
+        <div>
+        {{ range .Weather }}
+            <div class="weather">
+                Preciptiation: {{ .Precipitation }}
+            </div>
+        {{ end }}
+            <div>
+        {{ else }}
+            {{ .Error }}
+        {{ end }}
+    </body>
+</html>
