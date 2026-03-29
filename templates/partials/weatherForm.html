@@ -18,7 +18,7 @@
                 <select name="koppen-code" id="koppen-code"
                         hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/code" >
                     {{ range .KoppenCodeOptions }}
-                    <option value=" {{ .Value }}" {{ if .Selected }} selected {{end}} >{{ .Text }}</option>
+                    <option value="{{ .Value }}" {{ if .Selected }} selected {{end}} >{{ .Text }}</option>
                     {{ end }}
                 </select>
                 <label for="season">Season</label>
