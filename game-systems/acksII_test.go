@@ -184,3 +184,35 @@ func TestForLargeValueBug (t *testing.T) {
 	}
 
 }
+
+func TestWindDirections (t *testing.T) {
+	a := NewACKSII()
+	var tests = []struct {
+		name string
+		roll int
+		expectedWind, prevailingWind string
+	}{
+		{"Test Northerly result", 1, "Northerly", "Southerly"},
+		{"Test Northeasterly result", 2, "Northeasterly", "Southerly"},
+		{"Test Easterly result", 3, "Easterly", "Southerly"},
+		{"Test Southeasterly result", 4, "Southeasterly", "Southerly"},
+		{"Test Southerly result", 5, "Southerly", "Northerly"},
+		{"Test Southwesterly result", 6, "Southwesterly", "Southerly"},
+		{"Test Westerly result", 7, "Westerly", "Southerly"},
+		{"Test Northerwesterly result", 8, "Northwesterly", "Southerly"},
+		{"Test Prevailing 1 result", 9, "Southerly", "Southerly"},
+		{"Test Prevailing 2 result", 10, "Southerly", "Southerly"},
+		{"Test Prevailing 3 result", 11, "Southerly", "Southerly"},
+		{"Test Prevailing 4 result", 12, "Southerly", "Southerly"},
+
+
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T){
+			wind := a.GetWindDirection(tt.roll, tt.prevailingWind)
+			if (wind != tt.expectedWind) {
+				t.Errorf("Wrong wind for roll %d! Got:%s\tWanted:%s", tt.roll, wind, tt.expectedWind)
+			}
+		})
+	}
+}

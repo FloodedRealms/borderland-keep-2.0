@@ -4,7 +4,52 @@ import (
 	"fmt"
 	"math/rand"
 )
+/* Weather */
+type Season int
 
+const (
+	Winter Season = iota
+	Spring
+	Summer
+	Fall
+)
+
+func (s Season) String() string {
+	return [...]string{"Winter", "Spring", "Summer", "Fall"}[s]
+}
+
+func SeasonFromString(s string) (Season, error) {
+    switch s {
+    case "Winter":
+        return Winter, nil
+    case "Spring":
+        return Spring, nil
+    case "Summer":
+        return Summer, nil
+    case "Fall":
+        return Fall, nil
+    default:
+        return 0, fmt.Errorf("unknown season: %q", s)
+    }
+}
+
+type Roll struct {
+	Name, DiceLabel, Id string
+	DieFace, DieNumber, Result int
+	resolved bool
+}
+
+func (r *Roll) Resolve() {
+	if !r.resolved {
+		r.Result = Sum(RollMultipleDice(r.DieNumber, r.DieFace))
+		r.resolved = true
+	}
+}
+
+type Modifier struct {
+	Name string
+	Value int
+}
 
 type GameSystem interface {
 	CalculateNumberOfShares(playerCount, henchmenCount int) float64
@@ -19,6 +64,11 @@ type GameSystem interface {
 	CalculateXPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullXPShare, henchmenShare int)
 	CalculateGPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullShare, henchmenShare int)
 	CalculateDetailedCoinage(shares float64, copper, silver, electrum, gold, platinum int) []int
+    DailyWeather(diceRolls, previousDiceRolls []Roll, koppenCode, prevailingWind string, season Season, simulateFront bool) ([]string, error)
+	ListWinds() []string
+	ListKoppenCodes() []string
+	ListWeatherModifiers( koppenCode string, season Season) []Modifier
+	ListWeatherRolls() []Roll
 }
 
 type SystemNotFoundError struct {
@@ -58,4 +108,8 @@ func Sum(rolls []int) int {
 		total += r
 	}
 	return total
+}
+
+func ListSeasons() []string {
+	return []string{"Winter", "Spring", "Summer", "Fall"}
 }

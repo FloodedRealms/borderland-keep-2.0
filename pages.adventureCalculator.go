@@ -110,11 +110,11 @@ func ParseandValidateTreasure(form url.Values, e []string) ([]SpecialTreasure, b
 		case "name":
 			tmap[index].Name = val
 		case "value":
-			gp, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("GP value of treasure %s", index), e)
+			gp, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("GP value of treasure %d", index), e)
 			e = append(e, es...)
 			tmap[index].GPValue = gp
 		case "collected":
-			gp, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Number of treasure %s", index), e)
+			gp, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Number of treasure %d", index), e)
 			e = append(e, es...)
 			tmap[index].Number = gp
 		}
@@ -150,11 +150,11 @@ func ParseandValidateCombat(form url.Values, e []string) ([]CombatEncounter, boo
 		case "name":
 			tmap[index].Name = val
 		case "value":
-			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("XP value of combat %s", index), e)
+			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("XP value of combat %d", index), e)
 			e = append(e, es...)
 			tmap[index].XPValue = v
 		case "defeated":
-			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Number of combet %s", index), e)
+			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Number of combat %d", index), e)
 			e = append(e, es...)
 			tmap[index].NumberDefeated = v
 		}
@@ -190,11 +190,11 @@ func ParseandValidateMagicItems(form url.Values, e []string) ([]MagicItem, bool,
 		case "name":
 			tmap[index].Name = val
 		case "apparent":
-			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Apparent Value of Magic Item %s", index), e)
+			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Apparent Value of Magic Item %d", index), e)
 			e = append(e, es...)
 			tmap[index].ApparentValue = v
 		case "sell":
-			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Sell value of Magic Item %s", index), e)
+			v, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Sell value of Magic Item %d", index), e)
 			e = append(e, es...)
 			tmap[index].SellValue = v
 		case "sold":

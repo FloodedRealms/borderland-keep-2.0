@@ -54,7 +54,7 @@ body {
   margin-bottom: 2rem;
 }
 
-.page-header h1 {
+.tool-header h1 {
   font-family: var(--font-display);
   font-size: clamp(2.4rem, 5vw, 4rem);
   color: var(--gold-bright);
@@ -65,10 +65,10 @@ body {
   line-height: 1.1;
 }
 
-.page-header p {
+.tool-header p {
   font-family: var(--font-italic);
   font-style: italic;
-  color: var(--parchment-dark);
+  color: var(--gold);
   font-size: 1.2rem;
   margin-top: 0.4rem;
 }
@@ -382,24 +382,56 @@ body {
   border-radius: 2px;
 }
 
+/* Foretell button */
+#generate-weather-button {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  background: var(--ink);
+  border: 1px solid var(--gold);
+  border-radius: 1px;
+  padding: 0.45rem 2rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  margin-top: 1.1rem;
+  align-self: flex-start;
+  text-shadow: 1px 1px 0 #3a1a00;
+}
+
+#generate-weather-button:hover {
+  background: var(--ink-faded);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+
+#generate-weather-button:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
 /* --- Modal open button (top-right of summary panel) --- */
 .modal-open-button {
-  position: absolute;
-  bottom: 0;
-  right: 50%;
-  font-style: italic;
   font-family: var(--font-display);
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.04em;
-
-  transition: background 0.15s, color 0.15s;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  color: #d4edda;
+  background: #2a5c35;
+  border: 1px solid var#4a8c5c;
+  border-radius: 1px;
+  padding: 0.45rem 2rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  margin-top: 1.1rem;
+  text-shadow: 2px 2px 0 #3a1a00;
 }
 
 .modal-open-button:hover {
-  background: var(--green-ink);
-  color: var(--ink);
-  border-color: var(--gold);
+  background: #3a7a48;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  transform: translateY(-1px);
 }
 
 /* --- Modal overlay (hyperscript version) --- */
@@ -657,7 +689,6 @@ body {
   color: var(--ink-faded);
   line-height: 1.65;
   margin-bottom: 1.3rem;
-  max-width: 80ch;
 }
 
 /* form layout */
@@ -682,7 +713,7 @@ body {
   grid-column: 1 / -1;
   font-family: var(--font-display);
   font-size: 1.2rem;
-  color: var(--gold);
+  color: var(--blood-red);
   padding: 0 0.6rem 0 0;
   letter-spacing: 0.06em;
   text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
@@ -702,7 +733,7 @@ body {
 #weather-controls fieldset:last-of-type legend {
   font-family: var(--font-display);
   font-size: 1.15rem;
-  color: var(--gold);
+  color: var(--blood-red);
   padding: 0 0.6rem 0 0;
   letter-spacing: 0.06em;
   flex-basis: 100%;
@@ -785,6 +816,8 @@ body {
   transform: translateY(1px);
   box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
 }
+
+
 
 /* ── Calendar header ─────────────────────────────────────────── */
 .calendar-header {
@@ -896,8 +929,8 @@ body {
 
 .roll-input legend {
   font-family: var(--font-display);
-  font-size: 1rem;
-  color: var(--gold);
+  font-size: 1.75rem;
+  color: var(--blood-red);
   padding: 0 0.3rem 0 0;
   letter-spacing: 0.05em;
 }
@@ -973,4 +1006,10 @@ body {
   opacity: 0.45;
   pointer-events: none;
   transition: opacity 0.2s;
+}
+
+
+.drag-right {
+  float: right;
+  margin-right: 0.5em;
 }

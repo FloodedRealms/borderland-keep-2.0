@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 )
 
 type ACKSII struct {
@@ -208,7 +209,7 @@ var KoppenModifiers = map[string][4]WeatherModifiers{
 		{TempDayMod: -11, TempNightMod: -11, PrecipMod: -5, WindMod: +0},
 	},
 }
-var Winds = []string{"Northerly", "Northeasterly", "Easterly", "Southeasterly", "Southerly", "SouthWesterly", "Westerly", "Northerwesterly"}
+var Winds = []string{"Northerly", "Northeasterly", "Easterly", "Southeasterly", "Southerly", "Southwesterly", "Westerly", "Northwesterly"}
 	return ACKSII{
 		goldValueLookupTable: []float64{0.01, 0.1, 0.5, 1, 5},
 		henchmenShare: 0.5,
@@ -402,19 +403,7 @@ func (a ACKSII) CalculateGoldShareAmount(shares float64, copper, silver, electru
 }
 
 
-/* Weather */
-type Season int
 
-const (
-	Winter Season = iota
-	Spring
-	Summer
-	Fall
-)
-
-func (s Season) String() string {
-	return [...]string{"Winter", "Spring", "Summer", "Fall"}[s]
-}
 
 type WeatherModifiers struct {
 	TempDayMod   int
@@ -432,13 +421,6 @@ func (a ACKSII) GetWeatherModifers(koppenCode string, season Season) (WeatherMod
 	return seasons[season], true
 }
 
-func (a ACKSII) GetWindResult(diceRoll int, prevailingWind string) string {
-	if diceRoll >= 8 {
-		return prevailingWind
-	}
-	return a.winds[diceRoll-1]
-}
-
 func (a ACKSII) GetWeatherRolls() []int {
 	temp := Sum(RollMultipleDice(2, 6))
 	percip := Sum(RollMultipleDice(2, 6))
@@ -449,34 +431,43 @@ func (a ACKSII) GetWeatherRolls() []int {
 
 }
 
-
-func (a ACKSII) DailyWeather(diceRolls, previousDiceRolls []int, koppenCode, prevailingWind string, season Season, simulateFront bool) ([]string, error) {
-
-	// Since the rolls get the same modifiers, we can apply the simulation here
-	if simulateFront {
-		for i, roll := range diceRolls {
-			if roll == 2 || roll == 12 || roll == previousDiceRolls[i] {
-				continue
+func (a ACKSII) simulateFront(roll int, previous int) int {
+			if roll == 2 || roll == 12 {
+				return roll
 			}
-			if roll > previousDiceRolls[i] {
+			if roll > previous {
 				roll = roll - 1
 			}
-			if roll < previousDiceRolls[i] {
+			if roll < previous {
 				roll = roll + 1
 			}
-			diceRolls[i] = roll
-		}
+	return roll
+}
+
+func (a ACKSII) DailyWeather(diceRolls, previousDiceRolls []Roll, koppenCode, prevailingWind string, season Season, simulateFront bool) ([]string, error) {
+		tempDayRoll := diceRolls[0].Result
+		tempNightRoll := diceRolls[0].Result
+		percipRoll := diceRolls[1].Result
+		windRoll := diceRolls[2].Result
+		windDirRoll := diceRolls[3].Result
+
+	// Since the rolls get the same modifiers, we can apply the simulation here
+	if simulateFront && len(diceRolls) == len(previousDiceRolls) {
+	 tempDayRoll = a.simulateFront(tempDayRoll, previousDiceRolls[0].Result)
+	 tempNightRoll = a .simulateFront(tempNightRoll, previousDiceRolls[0].Result)
+	 percipRoll =	a.simulateFront(percipRoll, previousDiceRolls[1].Result)
+	 windRoll = a.simulateFront(windRoll, previousDiceRolls[2].Result)
+
 	}
 	mods, ok := a.GetWeatherModifers(koppenCode, season)
 	if !ok {
-		return []string{}, errors.New(fmt.Sprintf("Unknown koppen code \"%s\" or season \"%s\"", koppenCode, string(season)))
+		return []string{}, errors.New(fmt.Sprintf("Unknown koppen code \"%s\" or season \"%s\"", koppenCode, season.String()))
 	}
+		tempDayRoll = tempDayRoll + mods.TempDayMod
+		tempNightRoll = tempNightRoll + mods.TempNightMod
+		percipRoll = percipRoll + mods.PrecipMod
+		windRoll = windRoll + mods.WindMod
 
-		tempDayRoll := diceRolls[0] + mods.TempDayMod
-		tempNightRoll := diceRolls[0] + mods.TempNightMod
-		percipRoll := diceRolls[1] + mods.PrecipMod
-		windRoll := diceRolls[2] + mods.WindMod
-		windDirRoll := diceRolls[3]
 
 		dayTemp, ok := a.GetTempature(tempDayRoll, mods.TempDayMod)
 	if !ok {
@@ -575,10 +566,10 @@ func (a ACKSII) GetWind(roll int) (string, bool) {
 }
 
 func (a ACKSII) GetWindDirection(roll int, prevailing string) string {
-	if roll >= len(a.winds) {
+	if roll > 8 || roll < 0 { // The table is a d12 roll. With 9-12 being prevailing. The less than 0 case is so if something weird happens (like users) we don't crash
 		return prevailing
 	}
-	return a.winds[roll]
+	return a.winds[roll - 1]
 }
 
 func (a ACKSII) ListWinds() []string {
@@ -593,17 +584,67 @@ func (a ACKSII) ListKoppenCodes() []string {
 		codes[i] = c
 		i++
 	}
+	slices.Sort(codes)
 	return codes
 }
 
-func (a ACKSII) ListModifiers(koppenCode string, season Season) map[string]int {
+func (a ACKSII) ListWeatherModifiers(koppenCode string, season Season) []Modifier {
 	if mods, ok := a.GetWeatherModifers(koppenCode, season); ok {
-		return map[string]int{
-			"Day Temperature": mods.TempDayMod,
-			"Night Temperature": mods.TempNightMod,
-			"Percipitation": mods.PrecipMod,
-			"Wind": mods.WindMod,
+		dt := Modifier{
+			Name: "Day Temperature",
+			Value: mods.TempDayMod,
 		}
+		nt := Modifier{
+			Name: "Night Temperature",
+			Value: mods.TempNightMod,
+		}
+		pr := Modifier{
+			Name: "Precipitation",
+			Value: mods.PrecipMod,
+		}
+		ws := Modifier{
+			Name: "Wind",
+			Value: mods.WindMod,
+		}
+		return []Modifier{dt, nt, pr, ws}
 	}
-	return map[string]int{}
+	return []Modifier{}
+}
+
+func (a ACKSII) ListWeatherRolls() []Roll {
+	t := Roll{
+		Name: "Temperature",
+		Id: "temp",
+		DieFace: 6,
+		DieNumber: 2,
+		Result: Sum(RollMultipleDice(2, 6)),
+		resolved: false,
+	}
+	p := Roll{
+		Name: "Precipitation",
+		Id: "precip",
+
+		DieFace: 6,
+		DieNumber: 2,
+		Result: Sum(RollMultipleDice(2, 6)),
+		resolved: false,
+	}
+	w := Roll{
+		Name: "Wind",
+		Id: "wind",
+
+		DieFace: 6,
+		DieNumber: 2,
+		Result: Sum(RollMultipleDice(2, 6)),
+		resolved: false,
+	}
+	d := Roll{
+		Name: "Wind Direction",
+		Id: "winddir",
+		DieFace: 12,
+		DieNumber: 1,
+		Result: RollDice(12),
+		resolved: false,
+	}
+	return []Roll{t, p, w, d}
 }

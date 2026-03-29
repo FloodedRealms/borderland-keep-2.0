@@ -98,9 +98,10 @@ func main() {
 	sessionMu = sync.RWMutex{}
 	//pages
 	calculatorPage := NewPageAdventureCalculator()
+	weatherPage := NewPageWeather()
 
 
-	go cleanupSessions(10*time.Minute, 1*time.Hour, []SessionDataUser{calculatorPage})
+	go cleanupSessions(10*time.Minute, 1*time.Hour, []SessionDataUser{calculatorPage, weatherPage})
 	staticRenderer := *NewRenderer()
 	//router
 	router := http.NewServeMux()
@@ -114,8 +115,10 @@ func main() {
 	router.Handle("/index",  renderStaticPage("index.html", staticRenderer))
 	router.Handle("/dicegoblin",  renderStaticPage("dicegoblin.html", staticRenderer))
 	router.Handle("/legal",  renderStaticPage("legal.html", staticRenderer))
+
 	// Tool Pages
 	calculatorPage.RegisterRoutes(router)
+	weatherPage.RegisterRoutes(router)
 
 	//User Pages
 

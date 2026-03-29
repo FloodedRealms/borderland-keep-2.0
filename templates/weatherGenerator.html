@@ -4,14 +4,16 @@
         <title>The Damnable Weather</title>
         {{ template "includes.html" }}
 
-        <link rel="stylesheet" href="/static/css/ledger.css">
+        <link rel="stylesheet" href="/static/css/ledger2.css">
     </head>
     <body>
         <header class="page-header">
             {{ template "banner.html" }}
             {{ template "nav.html" }}
-            <h1>Weather Report</h2>
-            <p>Know what the sky fortells!<p>
+            <div class=tool-header>
+            <h1>Weather Oracle</h2>
+            <p>Know what the sky portendeth!<p>
+            </p>
         </header>
         {{ template "weatherForm.html" . }}
     </body>
