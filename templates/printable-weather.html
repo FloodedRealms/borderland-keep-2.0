@@ -2,23 +2,57 @@
 <html>
     <head>
         <title>The Printable Weather</title>
+        <link rel="stylesheet" href="/static/css/borderlandkeep.css">
+        <link rel="stylesheet" href="/static/css/printable.css">
+
+        <script src="https://unpkg.com/htmx.org"></script>
+        <script src="https://unpkg.com/hyperscript.org@0.9.14"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:ital,wght@0,400;0,700;1,400;1,700&family=Alegreya+Sans:ital,wght@0,400;0,700;1,400;1,700&family=MedievalSharp&display=swap"
+            rel="stylesheet">
     </head>
     <body>
         {{ if eq .Valid true }}
-
-        Koppen Code: {{ .Koppen }}
-        Season: {{ .Season }}
-        Prevailing Wind: {{ .PrevailingWind }}
-
-        <div>
-        {{ range .Weather }}
-            <div class="weather">
-                Preciptiation: {{ .Precipitation }}
+        <button class ="send-printer" onclick="window.print()">Print</button>
+        <div class="printable-section">
+            <div class="printable-weather-header">
+                <span> Koppen Code: {{ .Koppen }} </span>
+                <span> Season: {{ .Season }} </span>
+                <span> Prevailing Wind: {{ .PrevailingWind }} </span>
             </div>
-        {{ end }}
-            <div>
+            <div class="printable-weather-cells">
+                {{ range .Weather }}
+                <div class="printable-weather-cell">
+                    <dl>
+                        <dd>
+                            Day Temperature:
+                        </dd>
+                        <dt>{{ .TemperatureDay }}</dt>
+                        <dd>
+                            Night Temperature:
+                        </dd>
+                        <dt>{{ .TemperatureNight }}</dt>
+                        <dd>
+                            Preciptiation:
+                        </dd>
+                        <dt>{{ .Precipitation }}</dt>
+                        <dd>
+                            Wind Strength:
+                        </dd>
+                        <dt>{{ .Wind }}</dt>
+                        <dd>
+                            Wind Direction:
+                        </dd>
+                        <dt>{{ .WindDirection }}</dt>
+                    </dl>
+                </div>
+                {{ end }}
+            </div>
+        </div>
         {{ else }}
-            {{ .Error }}
+        {{ .Error }}
         {{ end }}
     </body>
 </html>

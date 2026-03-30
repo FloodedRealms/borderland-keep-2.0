@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	gamesystems "github.com/FloodedRealms/borderland-keep-2.0/game-systems"
@@ -136,6 +138,24 @@ func (w WeatherForm) RerollWeatherDice() {
 	}
 }
 
+func (w WeatherForm) CSVSummary() string {
+	output := fmt.Sprint("Day Temperature,Night Temperature,Precipitation,Wind Strength,Wind Direction\n")
+	for _, wt := range w.WeatherResults {
+		output += fmt.Sprintf("%s,%s,%s,%s,%s\n", wt.TemperatureDay, wt.TemperatureNight, wt.Precipitation, wt.Wind, wt.WindDirection)
+	}
+	return output
+}
+
+func (w WeatherForm) MarkDownSummary() string {
+	output := fmt.Sprintf("|%-25s|%-25s|%-25s|%-25s|%-25s|\n","Day Temperature","Night Temperature","Precipitation","Wind Strength","Wind Direction")
+	output += fmt.Sprintf("|%s|%s|%s|%s|%s|\n", strings.Repeat("-", 25), strings.Repeat("-", 25), strings.Repeat("-", 25), strings.Repeat("-", 25), strings.Repeat("-", 25), )
+	for _, wt := range w.WeatherResults {
+		output += fmt.Sprintf("|%-25s|%-25s|%-25s|%-25s|%-25s|\n", wt.TemperatureDay, wt.TemperatureNight, wt.Precipitation, wt.Wind, wt.WindDirection)
+	}
+
+	return output
+}
+
 func buildSelectListFromStrings(optionStrings []string, selectedOption string) []*SelectOption {
 	options := make([]*SelectOption, len(optionStrings))
 	i := 0
@@ -217,6 +237,7 @@ func (p *PageWeather) CleanupSessionData(sessionId string) {
 
 func (p PageWeather) RegisterRoutes(router *http.ServeMux) {
 	router.Handle("/tools/weather", p.addWeatherToContext(p.index()))
+	router.Handle("PUT /tools/weather", p.addWeatherToContext(p.reRollWeather(p.form())))
 
 	router.Handle("PATCH /tools/weather/mode", p.addWeatherToContext(p.updateGenerationMode(p.form())))
 	router.Handle("PATCH /tools/weather/code", p.addWeatherToContext(p.updateKoppenCode(p.form())))
@@ -224,8 +245,9 @@ func (p PageWeather) RegisterRoutes(router *http.ServeMux) {
 	router.Handle("PATCH /tools/weather/prevailing-wind", p.addWeatherToContext(p.updatePrevailingWind(p.form())))
 	router.Handle("PATCH /tools/weather/front", p.addWeatherToContext(p.updateFrontSimulation(p.form())))
 
-
 	router.Handle("GET /tools/printable-weather", p.printerpage())
+
+	router.Handle("GET /tools/weather/summary", p.addWeatherToContext(p.weatherSummary()))
 }
 
 
@@ -249,6 +271,35 @@ func (p PageWeather) form() http.HandlerFunc {
 		renderedPage, err := p.renderer.RenderPage(p.formTemplateName, weather)
 		if err != nil {
 			log.Printf("Error rendering Index of the Weather Page: %v\n", err)
+			w.Header().Add("hx-redirect", "/error")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		w.Write([]byte(renderedPage))
+	}
+}
+
+
+func (p PageWeather) weatherSummary() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var pdata struct {
+			Text string
+		} = struct {
+			Text string
+		} {
+			Text: "",
+		}
+		wt := p.getWeatherFromContext(r)
+	params := r.URL.Query()
+	format := params.Get("format")
+	if format == "" || format == "csv" {
+		pdata.Text = wt.CSVSummary()
+	}
+		if format == "markdown" {
+			pdata.Text = wt.MarkDownSummary()
+		}
+		renderedPage, err := p.renderer.RenderPage("weatherSummaryModal.html", pdata)
+		if err != nil {
+			log.Printf("Error rendering Summary of the Weather Page: %v\n", err)
 			w.Header().Add("hx-redirect", "/error")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -365,6 +416,15 @@ func (p PageWeather) updateFrontSimulation(next http.HandlerFunc) http.HandlerFu
 		r.ParseForm()
 		o := r.Form.Get("front")
 		wt.SimulateFront = o == "true"
+		next.ServeHTTP(w, r)
+	}
+}
+
+
+func (p PageWeather) reRollWeather(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		wt := p.getWeatherFromContext(r);
+		wt.RerollWeatherDice()
 		next.ServeHTTP(w, r)
 	}
 }

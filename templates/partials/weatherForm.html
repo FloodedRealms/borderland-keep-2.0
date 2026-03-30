@@ -53,8 +53,8 @@
         <div>
         <button id="generate-weather-button" hx-put="/tools/weather" hx-trigger="mousedown" hx-target="#weather">Foretell!</button>
         <a id="printer-version" href="/tools/printable-weather" class="drag-right" target="_blank" rel="noreferrer noopener">For ye printer!</a>
-        <button id="generate-markdown" class="modal-open-button drag-right" hx-get="/tools/weather/markdown" hx-trigger="mousedown" hx-target="#weather">For ye markdown!</button>
-        <button id="open-csv" class="modal-open-button drag-right" hx-get="/tools/weather/csv" hx-trigger="mousedown" hx-target="#weather">For ye spreadsheet!</button>
+        <button id="generate-markdown" class="modal-open-button drag-right" hx-get="/tools/weather/summary?format=markdown" hx-trigger="mousedown" hx-target="body" hx-swap="beforeend">For ye markdown!</button>
+        <button id="open-csv" class="modal-open-button drag-right" hx-get="/tools/weather/summary?format=csv" hx-trigger="mousedown" hx-target="body" hx-swap="beforeend">For ye spreadsheet!</button>
         </div>
 
     </section>
