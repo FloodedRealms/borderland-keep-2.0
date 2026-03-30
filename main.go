@@ -113,8 +113,9 @@ func main() {
 
 	router.Handle("/", renderStaticPage("index.html", staticRenderer))
 	router.Handle("/index",  renderStaticPage("index.html", staticRenderer))
-	router.Handle("/dicegoblin",  renderStaticPage("dicegoblin.html", staticRenderer))
-	router.Handle("/legal",  renderStaticPage("legal.html", staticRenderer))
+	router.Handle("/about",  renderStaticPage("about.html", staticRenderer))
+	router.Handle("/donate", renderStaticPage("donate.html", staticRenderer))
+
 
 	// Tool Pages
 	calculatorPage.RegisterRoutes(router)
