@@ -43,7 +43,7 @@ func NewWeatherForm() *WeatherForm {
 	acks, _ := gamesystems.LoadGameSystem("ACKS II")
 	koppenCodes := acks.ListKoppenCodes()
 	winds := acks.ListWinds()
-	currentWind := "Westerly"
+	currentWind := "Easterly"
 	currentKoppen := "Cfa"
 	allowedModes := []*SelectOption{
 		&SelectOption{
@@ -58,7 +58,7 @@ func NewWeatherForm() *WeatherForm {
 		},
 	}
 	seasons := gamesystems.ListSeasons()
-	cseason := gamesystems.Spring
+	cseason := gamesystems.Summer
 	seasonOptions := buildSelectListFromStrings(seasons, cseason.String())
 	windOptions := buildSelectListFromStrings(winds, currentWind)
 	koppenOptions := buildSelectListFromStrings(koppenCodes, currentKoppen)
