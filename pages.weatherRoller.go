@@ -254,7 +254,6 @@ func (p PageWeather) RegisterRoutes(router *http.ServeMux) {
 func (p PageWeather) index() http.HandlerFunc {
 	return func(w http.ResponseWriter, r* http.Request) {
 		wt := p.getWeatherFromContext(r)
-		renderedPage, err := p.renderer.RenderPage(p.templateName, wt)
 		params := r.URL.Query()
 		mode := params.Get("format")
 		code := params.Get("code")
@@ -293,6 +292,7 @@ func (p PageWeather) index() http.HandlerFunc {
 		if applySettings {
 			wt.ApplyWeatherSettings()
 		}
+		renderedPage, err := p.renderer.RenderPage(p.templateName, wt)
 		if err != nil {
 			log.Printf("Error rendering Index of the Weather Page: %v\n", err)
 			w.Header().Add("hx-redirect", "/error")
