@@ -43,8 +43,8 @@ func NewWeatherForm() *WeatherForm {
 	acks, _ := gamesystems.LoadGameSystem("ACKS II")
 	koppenCodes := acks.ListKoppenCodes()
 	winds := acks.ListWinds()
-	currentWind := "Southerly"
-	currentKoppen := "Af"
+	currentWind := "Westerly"
+	currentKoppen := "Cfa"
 	allowedModes := []*SelectOption{
 		&SelectOption{
 			Value: string(manual),
@@ -253,8 +253,46 @@ func (p PageWeather) RegisterRoutes(router *http.ServeMux) {
 
 func (p PageWeather) index() http.HandlerFunc {
 	return func(w http.ResponseWriter, r* http.Request) {
-		weather := p.getWeatherFromContext(r)
-		renderedPage, err := p.renderer.RenderPage(p.templateName, weather)
+		wt := p.getWeatherFromContext(r)
+		renderedPage, err := p.renderer.RenderPage(p.templateName, wt)
+		params := r.URL.Query()
+		mode := params.Get("format")
+		code := params.Get("code")
+		season := params.Get("season")
+		wind := params.Get("wind")
+		front := params.Get("front")
+		applySettings := false
+		if ValidateSelectOption(wt.ModeOptions, mode) {
+			wt.CurrentMode = mode
+			SetOptionSelected(wt.ModeOptions, mode)
+			applySettings = true
+
+		}
+		if ValidateSelectOption(wt.KoppenCodeOptions, code) {
+			wt.CurrentKoppenCode = code
+			SetOptionSelected(wt.KoppenCodeOptions, code)
+			applySettings = true
+
+		}
+		if ValidateSelectOption(wt.SeasonOptions, season) {
+			wt.CurrentSeason, _ = gamesystems.SeasonFromString(season)
+			SetOptionSelected(wt.SeasonOptions, season)
+			applySettings = true
+
+		}
+		if ValidateSelectOption(wt.WindOptions, wind) {
+			wt.CurrentWind = wind
+			SetOptionSelected(wt.WindOptions, wind)
+			applySettings = true
+
+		}
+		if front == "true" {
+			wt.SimulateFront = true
+			applySettings = true
+		}
+		if applySettings {
+			wt.ApplyWeatherSettings()
+		}
 		if err != nil {
 			log.Printf("Error rendering Index of the Weather Page: %v\n", err)
 			w.Header().Add("hx-redirect", "/error")
@@ -363,6 +401,15 @@ func SetOptionSelected(opts []*SelectOption, option string) bool {
 			}
 		}
 	return optionSet
+}
+
+func ValidateSelectOption(opts []*SelectOption, option string) bool {
+		for _, o := range opts {
+			if o.Value == option {
+				return true
+			}
+		}
+	return false
 }
 
 func (p PageWeather) updateGenerationMode(next http.HandlerFunc) http.HandlerFunc {
