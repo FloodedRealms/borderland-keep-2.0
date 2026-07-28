@@ -55,14 +55,14 @@ type GameSystem interface {
 	CalculateNumberOfShares(playerCount, henchmenCount int) float64
 	CalculateTotalGPFromCoinage(copper, silver, electrum, gold, platinum int) float64
 	CalculateTotalXPFromCombat(combatants, xp []int) float64
-	CalculateTotalGPFromSpecialTreasure(numberRetrieved, gpValue []int) float64
+	CalculateTotalGPFromSpecialTreasure(numberRetrieved []int, gpValue []float64) float64
 	CalculateTotalGPFromMagicItems(apparentValue, sellValue []int, isSold []bool) float64
-	CalculateGPSharesFromSpecialTreasure(numberRetrieved, gpValue []int, shares float64) (int, int)
+	CalculateGPSharesFromSpecialTreasure(numberRetrieved []int, gpValue []float64, shares float64) (int, int)
 	CalculateGPSharesFromMagicItems(apparentValue, sellValue []int, isSold []bool,shares float64) (int, int)
-	CalculateTotalXP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) int
-	CalculateTotalGP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) int
-	CalculateXPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullXPShare, henchmenShare int)
-	CalculateGPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullShare, henchmenShare int)
+	CalculateTotalXP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) int
+	CalculateTotalGP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) int
+	CalculateXPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullXPShare, henchmenShare int)
+	CalculateGPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullShare, henchmenShare int)
 	CalculateDetailedCoinage(shares float64, copper, silver, electrum, gold, platinum int) []int
     DailyWeather(diceRolls, previousDiceRolls []Roll, koppenCode, prevailingWind string, season Season, simulateFront bool) ([]string, error)
 	ListWinds() []string

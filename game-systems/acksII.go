@@ -291,15 +291,15 @@ func (a ACKSII) CalculateTotalXPFromCombat(combatants, xpValue []int) float64 {
 	return total
 }
 
-func (a ACKSII) CalculateTotalGPFromSpecialTreasure(numberRetrieved, gpValue []int) float64 {
+func (a ACKSII) CalculateTotalGPFromSpecialTreasure(numberRetrieved []int, gpValue []float64) float64 {
 	total := 0.0
 	for i, v := range numberRetrieved {
-		total = total + float64(v * gpValue[i])
+		total = total + float64(v) * gpValue[i]
 	}
 	return total
 }
 
-func (a ACKSII) CalculateGPSharesFromSpecialTreasure(numberRetrieved, gpValue []int, shares float64) (int, int) {
+func (a ACKSII) CalculateGPSharesFromSpecialTreasure(numberRetrieved []int, gpValue []float64, shares float64) (int, int) {
 	if shares == 0.0 {
 		return 0,0
 	}
@@ -327,7 +327,7 @@ func (a ACKSII) CalculateGPSharesFromMagicItems(apparentValue, sellValue []int, 
 	return int(math.RoundToEven(total / shares)), int(math.RoundToEven((total / shares) * a.henchmenShare))
 }
 
-func (a ACKSII)	CalculateTotalXP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV []int, magicItemIsSold []bool) int {
+func (a ACKSII)	CalculateTotalXP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV []int, magicItemIsSold []bool) int {
 	coinXP := a.CalculateTotalGPFromCoinage(copper, silver, electrum, gold, platinum)
 	specialTreasureXP := a.CalculateTotalGPFromSpecialTreasure(specialTreasureRetrieved, specialTreasureValue)
 	combatXP := a.CalculateTotalXPFromCombat(combatantsDefeated, combatantXPValue)
@@ -335,14 +335,14 @@ func (a ACKSII)	CalculateTotalXP(copper, silver, electrum, gold, platinum int, s
 	return int(math.RoundToEven(coinXP + specialTreasureXP + combatXP + magicItemXP))
 }
 
-func (a ACKSII)	CalculateTotalGP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, magicItemAV, magicItemSV []int, magicItemIsSold []bool) int {
+func (a ACKSII)	CalculateTotalGP(copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, magicItemAV, magicItemSV []int, magicItemIsSold []bool) int {
 	coinXP := a.CalculateTotalGPFromCoinage(copper, silver, electrum, gold, platinum)
 	specialTreasureXP := a.CalculateTotalGPFromSpecialTreasure(specialTreasureRetrieved, specialTreasureValue)
 	magicItemXP := a.CalculateTotalGPFromMagicItems(magicItemAV, magicItemSV, magicItemIsSold)
 	return int(math.RoundToEven(coinXP + specialTreasureXP + magicItemXP))
 }
 
-func (a ACKSII)	CalculateXPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV []int, magicItemIsSold []bool) (fullXPShare, henchmenShare int) {
+func (a ACKSII)	CalculateXPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, combatantsDefeated, combatantXPValue, magicItemAV, magicItemSV []int, magicItemIsSold []bool) (fullXPShare, henchmenShare int) {
 	if totalShares == 0 {
 		return 0, 0
 	}
@@ -356,7 +356,7 @@ func (a ACKSII)	CalculateXPShares(totalShares float64, copper, silver, electrum,
 	return int(fullShare), int(henchShare)
 }
 
-func (a ACKSII)	CalculateGPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved, specialTreasureValue, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullShare, henchmenShare int) {
+func (a ACKSII)	CalculateGPShares(totalShares float64, copper, silver, electrum, gold, platinum int, specialTreasureRetrieved []int, specialTreasureValue []float64, magicItemAV, magicItemSV[]int, magicItemIsSold []bool) (fullShare, henchmenShare int) {
 	if totalShares == 0.0 {
 		return 0,0
 	}

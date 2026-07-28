@@ -110,13 +110,13 @@ func ParseandValidateTreasure(form url.Values, e []string) ([]SpecialTreasure, b
 		case "name":
 			tmap[index].Name = val
 		case "value":
-			gp, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("GP value of treasure %d", index), e)
+			gp, _, es := ValidatePositiveFloat64Field(val, fmt.Sprintf("GP value of treasure %d", index), e)
 			e = append(e, es...)
 			tmap[index].GPValue = gp
 		case "collected":
-			gp, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Number of treasure %d", index), e)
+			number, _, es := ValidatePositiveIntegerField(val, fmt.Sprintf("Number of treasure %d", index), e)
 			e = append(e, es...)
-			tmap[index].Number = gp
+			tmap[index].Number = number
 		}
 	}
 
@@ -223,6 +223,17 @@ func ValidatePositiveIntegerField(input, fieldLabel string, errors []string) (in
 	return value, true, errors
 }
 
+func ValidatePositiveFloat64Field(input, fieldLabel string, errors []string) (float64, bool, []string) {
+	value, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		return value, false, append(errors, fmt.Sprintf("%s should be a number!", fieldLabel))
+	}
+	if value < 0 {
+		return value, false, append(errors, fmt.Sprintf("%s should be at least 0.0!", fieldLabel))
+	}
+	return value, true, errors
+}
+
 type AdventureSummary struct {
 	PlayerCount int
 	HenchCount int
@@ -249,11 +260,11 @@ const (
 )
 
 type SpecialTreasure struct {
-	GPValue int
+	GPValue float64
 	SPType SpecialTreasureType
 	Number int
 	Name string
-	TotalValue int
+	TotalValue float64
 }
 
 type MagicItem struct {
@@ -280,8 +291,8 @@ type PageAdventureCalculator struct {
 
 }
 
-func (a Adventure) SpecialTreasureArrays() (numberRetrieved, value []int) {
-	numberRetrieved, value = []int{}, []int{}
+func (a Adventure) SpecialTreasureArrays() (numberRetrieved []int, value []float64) {
+	numberRetrieved, value = []int{}, []float64{}
 	for _, v := range a.SpecialTreasures {
 		numberRetrieved = append(numberRetrieved, v.Number)
 		value = append(value, v.GPValue)
@@ -516,7 +527,7 @@ func (p PageAdventureCalculator) UpdateSpecialTreasure(next http.HandlerFunc) ht
 			next.ServeHTTP(w, r)
 			return
 		}
-		value, err := strconv.Atoi(r.Form.Get(fmt.Sprintf("treasure-value-%d", id)))
+		value, err := strconv.ParseFloat(r.Form.Get(fmt.Sprintf("treasure-value-%d", id)), 64)
 		if err != nil {
 			a.Errors = append(a.Errors,fmt.Sprintf("Treasure Value Broken: %v\n", err))
 			next.ServeHTTP(w, r)
@@ -525,7 +536,7 @@ func (p PageAdventureCalculator) UpdateSpecialTreasure(next http.HandlerFunc) ht
 			a.SpecialTreasures[id].GPValue = value
 			a.SpecialTreasures[id].Number = number
 			a.SpecialTreasures[id].Name = name
-			a.SpecialTreasures[id].TotalValue = value * number
+		    a.SpecialTreasures[id].TotalValue = value * float64(number)
 
 		next.ServeHTTP(w, r)
 	}

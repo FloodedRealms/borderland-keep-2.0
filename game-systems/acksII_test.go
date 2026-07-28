@@ -2,10 +2,11 @@ package gamesystems
 
 import (
 	"testing"
+
 )
 
 
-func Treasure() ([][]int, []bool) {
+func Treasure() ([][]int, []float64, []bool) {
 		var coins = []int{ // Total 1000
 		10000, // 100 Gold in Copper
 		1000,   // 100 Gold in Silver
@@ -14,14 +15,14 @@ func Treasure() ([][]int, []bool) {
 		20,    // 100 Gold in Platinum
 	}
 	var stn = []int{1, 2, 5}
-	var stv = []int{50, 25, 20} // This represents 1 50 GP, 2 25 GP amd 5 20 GP special treasures ones
+	var stv = []float64{50.0, 25.0, 20.0} // This represents 1 50 GP, 2 25 GP amd 5 20 GP special treasures ones
 	var cbn = []int{1, 7, 3}
 	var cbv = []int{15, 10, 5} // This represents 1 15 XP, 7 10 XP and 3 5 XP Combats
 	var mgav = []int{50, 50}
 	var mgsp = []int{1000, 100}
 	var mgis = []bool{false, true}
 
-	return [][]int{coins, stn, stv, cbn, cbv, mgav, mgsp}, mgis
+	return [][]int{coins, stn, cbn, cbv, mgav, mgsp}, stv, mgis
 	}
 
 func TestGoldConversions(t *testing.T) {
@@ -66,8 +67,8 @@ func TestGoldConversions(t *testing.T) {
 func TestMagicItemGPCalulation(t *testing.T) {
 	a := NewACKSII()
 
-	treasure, mgis := Treasure()
-	magicItemGPValue := a.CalculateTotalGPFromMagicItems(treasure[5], treasure[6], mgis)
+	treasure, _, mgis := Treasure()
+	magicItemGPValue := a.CalculateTotalGPFromMagicItems(treasure[4], treasure[5], mgis)
 	expectedMagicItemValue := 200.0
 
 	if  magicItemGPValue != float64(expectedMagicItemValue) {
@@ -78,7 +79,7 @@ func TestMagicItemGPCalulation(t *testing.T) {
 
 func TestXPCalculation(t *testing.T) {
 	a := NewACKSII()
-	treasure, mgis := Treasure()
+	treasure, stv, mgis := Treasure()
 	var tests = []struct {
 		name string
 		players int
@@ -99,7 +100,43 @@ func TestXPCalculation(t *testing.T) {
 				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
 				return //no need to check calculation.
 			}
-			fShare, hShare := a.CalculateXPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], treasure[2], treasure[3], treasure[4], treasure[5], treasure[6], mgis )
+			fShare, hShare := a.CalculateXPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], stv, treasure[2], treasure[3], treasure[4], treasure[5], mgis )
+			if fShare != tt.expFullShare {
+				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
+			}
+			if hShare != tt.expHalfShare {
+				t.Errorf("Wrong Half Share Got: %d\tWanted: %d\n", hShare, tt.expHalfShare)
+			}
+		})
+	}
+}
+
+func TestXPCalculationWithFractionalValue(t *testing.T) {
+	a := NewACKSII()
+	treasure, stv, mgis := Treasure()
+	stv = append(stv, 100.5)
+	treasure[1] = append(treasure[1], 3)
+	var tests = []struct {
+		name string
+		players int
+		henchmen int
+		expShareNumber float64
+		expFullShare int
+		expHalfShare int
+	}{
+		{"5 Players", 5, 0, 5.0, 260, 130},
+		{"3 Players, 2 Henchmen", 3, 2, 4.0, 325, 162},
+		{"3 Players, 1 Henchmen", 3, 1, 3.5, 372, 186},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T){
+			numberShares := a.CalculateNumberOfShares(tt.players, tt.henchmen)
+
+			if (numberShares != tt.expShareNumber) {
+				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
+				return //no need to check calculation.
+			}
+			fShare, hShare := a.CalculateXPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], stv, treasure[2], treasure[3], treasure[4], treasure[5], mgis )
 			if fShare != tt.expFullShare {
 				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
 			}
@@ -112,7 +149,7 @@ func TestXPCalculation(t *testing.T) {
 
 func TestGoldCalculation(t *testing.T) {
 	a := NewACKSII()
-	treasure, mgis := Treasure()
+	treasure, stv, mgis := Treasure()
 	var tests = []struct {
 		name string
 		players int
@@ -133,7 +170,45 @@ func TestGoldCalculation(t *testing.T) {
 				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
 				return //no need to check calculation.
 			}
-			fShare, hShare := a.CalculateGPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], treasure[2], treasure[5], treasure[6], mgis )
+			fShare, hShare := a.CalculateGPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], stv, treasure[4], treasure[5], mgis)
+
+			if fShare != tt.expFullShare {
+				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
+			}
+			if hShare != tt.expHalfShare {
+				t.Errorf("Wrong Half Share Got: %d\tWanted: %d\n", hShare, tt.expHalfShare)
+			}
+		})
+	}
+
+}
+
+func TestGoldCalculationWithFractionalBreakdown(t *testing.T) {
+	a := NewACKSII()
+	treasure, stv, mgis := Treasure()
+	stv = append(stv, 100.5)
+	treasure[1] = append(treasure[1], 3)
+	var tests = []struct {
+		name string
+		players int
+		henchmen int
+		expShareNumber float64
+		expFullShare int
+		expHalfShare int
+	}{
+		{"5 Players", 5, 0, 5.0, 240, 120},
+		{"3 Players, 2 Henchmen", 3, 2, 4.0, 300, 150},
+		{"3 Players, 1 Henchmen", 3, 1, 3.5, 343, 171},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T){
+			numberShares := a.CalculateNumberOfShares(tt.players, tt.henchmen)
+
+			if (numberShares != tt.expShareNumber) {
+				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
+				return //no need to check calculation.
+			}
+			fShare, hShare := a.CalculateGPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], stv, treasure[4], treasure[5], mgis)
 
 			if fShare != tt.expFullShare {
 				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
@@ -149,7 +224,7 @@ func TestGoldCalculation(t *testing.T) {
 
 func TestForLargeValueBug (t *testing.T) {
 	a := NewACKSII()
-	treasure, mgis := Treasure()
+	treasure, stv, mgis := Treasure()
 	treasure[0][4] = 1000 // makes total XP 5980
 	var tests = []struct {
 		name string
@@ -172,7 +247,7 @@ func TestForLargeValueBug (t *testing.T) {
 				t.Errorf("Wrong number of Shares!\nGot:%f\tWanted:%f", numberShares, tt.expShareNumber)
 				return //no need to check calculation.
 			}
-			fShare, hShare := a.CalculateGPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], treasure[2], treasure[5], treasure[6], mgis )
+			fShare, hShare := a.CalculateGPShares(numberShares, treasure[0][0], treasure[0][1], treasure[0][2], treasure[0][3], treasure[0][4], treasure[1], stv, treasure[4], treasure[5], mgis )
 
 			if fShare != tt.expFullShare {
 				t.Errorf("Wrong Full Share Got: %d\tWanted: %d\n", fShare, tt.expFullShare)
