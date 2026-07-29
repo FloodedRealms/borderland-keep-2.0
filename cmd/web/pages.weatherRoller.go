@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
@@ -14,6 +14,9 @@ import (
 const weatherKey contextKey = "weather"
 
 type WeatherForm struct {
+	//Page Dage
+	ToolID string
+	ToolEditorClass string
 	// Form Data
 	currentSystem string
 	CurrentMode string
@@ -87,6 +90,8 @@ func NewWeatherForm() *WeatherForm {
 		wr[i] = weather
 	}
 	return &WeatherForm{
+		ToolID: "weather",
+		ToolEditorClass: "weather-editor-page",
 		currentSystem: "ACKS II",
 		CurrentMode: string(automatic),
 		ModeOptions: allowedModes,
@@ -185,7 +190,8 @@ const (
 )
 
 type PageWeather struct {
-	renderer *Renderer
+	renderer *htmlRenderer
+	logger *slog.Logger
 	templateName string
 	formTemplateName string
 	sessionData map[string]*WeatherForm
@@ -197,11 +203,12 @@ type SelectOption struct {
 	Selected bool
 }
 
-func NewPageWeather() *PageWeather {
+func NewPageWeather(r *htmlRenderer, l *slog.Logger) *PageWeather {
 	return &PageWeather{
 		templateName: "weatherGenerator.html",
 		formTemplateName: "weatherForm.html",
-		renderer: NewRenderer(),
+		renderer: r,
+		logger: l,
 		sessionData: map[string]*WeatherForm{},
 		mu: &sync.RWMutex{},
 	}
@@ -292,27 +299,31 @@ func (p PageWeather) index() http.HandlerFunc {
 		if applySettings {
 			wt.ApplyWeatherSettings()
 		}
-		renderedPage, err := p.renderer.RenderPage(p.templateName, wt)
+		//		renderedPage, err := p.renderer.RenderPage(p.templateName, wt)
+		//TODO: Move Weather pages
+		err := p.renderer.render(w, http.StatusOK, wt, "base", "layouts/tool.html", "pages/weatherGenerator.html")
 		if err != nil {
-			log.Printf("Error rendering Index of the Weather Page: %v\n", err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
+			p.logger.Info("Error rendering initial load:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
 		}
-		w.Write([]byte(renderedPage))
+
 	}
 }
 
 func (p PageWeather) form() http.HandlerFunc {
 	return func(w http.ResponseWriter, r* http.Request) {
-		weather := p.getWeatherFromContext(r)
-		weather.ApplyWeatherSettings()
-		renderedPage, err := p.renderer.RenderPage(p.formTemplateName, weather)
+		wt := p.getWeatherFromContext(r)
+		wt.ApplyWeatherSettings()
+		// renderedPage, err := p.renderer.RenderPage(p.formTemplateName, weather)
+		//TODO: Move Weather pages
+		err := p.renderer.render(w, http.StatusOK, wt, "base", "layouts/tool.html", "pages/weatherGenerator.html")
 		if err != nil {
-			log.Printf("Error rendering Index of the Weather Page: %v\n", err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
+			p.logger.Info("Error rendering form:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
 		}
-		w.Write([]byte(renderedPage))
+
 	}
 }
 
@@ -325,25 +336,28 @@ func (p PageWeather) weatherSummary() http.HandlerFunc {
 			Text string
 		} {
 			Text: "",
-		}
+			}
 		wt := p.getWeatherFromContext(r)
-	params := r.URL.Query()
-	format := params.Get("format")
-	if format == "" || format == "csv" {
-		pdata.Text = wt.CSVSummary()
-	}
+		params := r.URL.Query()
+		format := params.Get("format")
+		if format == "" || format == "csv" {
+			pdata.Text = wt.CSVSummary()
+		}
 		if format == "markdown" {
 			pdata.Text = wt.MarkDownSummary()
 		}
-		renderedPage, err := p.renderer.RenderPage("weatherSummaryModal.html", pdata)
+		//renderedPage, err := p.renderer.RenderPage("weatherSummaryModal.html", pdata)
+		//TODO: Move Weather pages
+		err := p.renderer.render(w, http.StatusOK, pdata, "partial:weather:summarymodal")
 		if err != nil {
-			log.Printf("Error rendering Summary of the Weather Page: %v\n", err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
+			p.logger.Info("Error rendering summary modal:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
 		}
-		w.Write([]byte(renderedPage))
+
 	}
 }
+
 
 func (p PageWeather) printerpage() http.HandlerFunc {
 
@@ -360,8 +374,8 @@ func (p PageWeather) printerpage() http.HandlerFunc {
 			Koppen, Season, PrevailingWind, Error string
 		} {
 			Weather: []*Weather{},
-			Valid: true,
-		}
+				Valid: true,
+			}
 
 		session := getSessionFromCtx(r)
 		var weather *WeatherForm
@@ -381,34 +395,35 @@ func (p PageWeather) printerpage() http.HandlerFunc {
 		printData.Season = weather.CurrentSeason.String()
 		printData.Weather = weather.WeatherResults
 
-		renderedPage, err := p.renderer.RenderPage("printable-weather.html", printData)
+		// renderedPage, err := p.renderer.RenderPage("printable-weather.html", printData)
+		//TODO: Move Weather pages
+		err := p.renderer.render(w, http.StatusOK, printData, "printableBase", "pages/printableWeather.html")
 		if err != nil {
-			log.Printf("Error rendering Index of the Weather Page: %v\n", err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
+			p.logger.Info("Error rendering summary modal:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
 		}
-		w.Write([]byte(renderedPage))
 	}
 }
 
 func SetOptionSelected(opts []*SelectOption, option string) bool {
-		optionSet := false
-		for _, o := range opts {
-			o.Selected = false
-			if o.Value == option {
-				o.Selected = true
-				optionSet = true
-			}
+	optionSet := false
+	for _, o := range opts {
+		o.Selected = false
+		if o.Value == option {
+			o.Selected = true
+			optionSet = true
 		}
+	}
 	return optionSet
 }
 
 func ValidateSelectOption(opts []*SelectOption, option string) bool {
-		for _, o := range opts {
-			if o.Value == option {
-				return true
-			}
+	for _, o := range opts {
+		if o.Value == option {
+			return true
 		}
+	}
 	return false
 }
 

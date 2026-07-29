@@ -54,6 +54,26 @@ body {
   margin-bottom: 2rem;
 }
 
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  color: var(--gold-bright);
+  text-shadow:
+    2px 2px 0 #3a1a00,
+    0 0 24px rgba(232,176,42,0.4);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+.page-header p {
+  font-family: var(--font-italic);
+  font-style: italic;
+  color: var(--parchment-dark);
+  font-size: 1.1rem;
+  margin-top: 0.4rem;
+  opacity: 0.85;
+}
+
 .tool-header h1 {
   font-family: var(--font-display);
   font-size: clamp(2.4rem, 5vw, 4rem);

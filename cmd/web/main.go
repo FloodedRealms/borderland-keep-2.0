@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/FloodedRealms/borderland-keep-2.0/assets"
 	"github.com/google/uuid"
 )
 
@@ -29,6 +31,18 @@ func generateSessionID() string {
 
 type SessionDataUser interface {
 	CleanupSessionData(string)
+}
+
+// The application struct holds the dependencies needed for our handlers,
+// including a htmlRenderer type.
+type application struct {
+    logger *slog.Logger
+    html   *htmlRenderer
+	pages []page
+}
+
+type page interface {
+	RegisterRoutes(router *http.ServeMux)
 }
 
 func cleanupSessions(interval, maxAge time.Duration, consumers []SessionDataUser) {
@@ -96,30 +110,47 @@ func main() {
 
 
 	sessionMu = sync.RWMutex{}
-	//pages
-	calculatorPage := NewPageAdventureCalculator()
-	weatherPage := NewPageWeather()
+    logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
+    // Initialize a new htmlRenderer, parsing the base template and all partial
+    // templates from assets/html into the shared template set.
+    htmlRenderer, err := newHTMLRenderer(assets.HTMLFiles, "base.html", "printableBase.html", "partials/*.html")
+    if err != nil {
+        logger.Error(err.Error())
+        os.Exit(1)
+    }
+
+	//pages
+	calculatorPage := NewPageAdventureCalculator(htmlRenderer, logger)
+	weatherPage := NewPageWeather(htmlRenderer, logger)
+
+	app := &application{
+        logger: logger,
+        html:   htmlRenderer,
+		pages: []page{calculatorPage, weatherPage},
+    }
 
 	go cleanupSessions(10*time.Minute, 1*time.Hour, []SessionDataUser{calculatorPage, weatherPage})
-	staticRenderer := *NewRenderer()
 	//router
 	router := http.NewServeMux()
 
-	fs := http.FileServer(http.Dir("./static"))
-	router.Handle("/static/", http.StripPrefix("/static/", fs))
+	fs := http.FileServerFS(assets.StaticFiles)
+	router.Handle("GET /static/", http.StripPrefix("/static/", fs))
+
+	for _, page := range(app.pages) {
+		page.RegisterRoutes(router)
+	}
 
 	// "Static" pages
 
-	router.Handle("/", renderStaticPage("index.html", staticRenderer))
-	router.Handle("/index",  renderStaticPage("index.html", staticRenderer))
-	router.Handle("/about",  renderStaticPage("about.html", staticRenderer))
-	router.Handle("/donate", renderStaticPage("donate.html", staticRenderer))
+	router.HandleFunc("/{$}",  app.home)
+	//router.Handle("/about",  renderStaticPage("about.html", staticRenderer))
+	//router.Handle("/donate", renderStaticPage("donate.html", staticRenderer))
 
 
 	// Tool Pages
-	calculatorPage.RegisterRoutes(router)
-	weatherPage.RegisterRoutes(router)
+	// calculatorPage.RegisterRoutes(router)
+	// weatherPage.RegisterRoutes(router)
 
 	//User Pages
 
@@ -127,21 +158,11 @@ func main() {
 		Addr:    ":9090",
 		Handler: sessionMiddleware(router),
 	}
-	log.Print("Listening on 9090")
-	for {
-		server.ListenAndServe()
-		log.Print("Server crash... attempting restart")
+    logger.Info("starting server", "port", 9090)
+    err = server.ListenAndServe()
+    if err != nil {
+        logger.Error(err.Error())
+        os.Exit(1)
 	}
-}
 
-func renderStaticPage(pageName string, pr Renderer) http.HandlerFunc {
-	return func (w http.ResponseWriter, r *http.Request) {
-		renderedPage, err := pr.RenderPage(pageName, nil)
-		if err != nil {
-			log.Printf("Error rendering Static Page %s: %v\n", pageName, err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		w.Write([]byte(renderedPage))
-	}
 }

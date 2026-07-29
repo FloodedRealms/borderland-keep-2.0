@@ -1,21 +1,16 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>The Printable Weather</title>
-        <link rel="stylesheet" href="/static/css/borderlandkeep.css">
-        <link rel="stylesheet" href="/static/css/printable.css">
 
-        <script src="https://unpkg.com/htmx.org"></script>
-        <script src="https://unpkg.com/hyperscript.org@0.9.14"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:ital,wght@0,400;0,700;1,400;1,700&family=Alegreya+Sans:ital,wght@0,400;0,700;1,400;1,700&family=MedievalSharp&display=swap"
-            rel="stylesheet">
-    </head>
-    <body>
+{{ define "page:title"}}The Printable Weather{{ end }}
+{{define "page:includes"}}
+        <link rel="stylesheet" href="/static/css/printable.css">
+{{ end }}
+
+
+{{ define "page:header-text" }}Weather Printer{{end}}
+{{ define "page:header-subtext" }}Print what the sky portendeth!{{end}}
+
+
+{{ define "page:content" }}
         {{ if eq .Valid true }}
-        <button class ="send-printer" onclick="window.print()">Print</button>
         <div class="printable-section">
             <div class="printable-weather-header">
                 <span> Koppen Code: {{ .Koppen }} </span>
@@ -54,5 +49,4 @@
         {{ else }}
         {{ .Error }}
         {{ end }}
-    </body>
-</html>
+{{end}}

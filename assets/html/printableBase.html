@@ -1,0 +1,23 @@
+{{define "printableBase"}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ template "page:title" }}</title>
+        <link rel="stylesheet" href="/static/css/borderlandkeep.css">
+        <link rel="stylesheet" href="/static/css/ledger2.css">
+        <link rel="stylesheet" href="/static/css/printable.css">
+
+        <script src="https://unpkg.com/htmx.org"></script>
+        <script src="https://unpkg.com/hyperscript.org@0.9.14"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:ital,wght@0,400;0,700;1,400;1,700&family=Alegreya+Sans:ital,wght@0,400;0,700;1,400;1,700&family=MedievalSharp&display=swap"
+            rel="stylesheet">
+    </head>
+    <body>
+        <button class ="send-printer" onclick="window.print()">Print</button>
+        {{ template "page:content" . }}
+    </body>
+</html>
+{{end}}

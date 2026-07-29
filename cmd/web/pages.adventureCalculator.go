@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -17,6 +18,8 @@ import (
 const adventureKey contextKey = "adventure"
 
 type Adventure struct {
+	ToolID string
+	ToolEditorClass string
 	NumberOfPlayers int
 	NumberOfHenchmen int
 	Gold int
@@ -42,6 +45,8 @@ type Adventure struct {
 
 func NewAdventure() *Adventure {
 	return &Adventure{
+		ToolID: "calculator",
+		ToolEditorClass: "split-pane-editor",
 		SpecialTreasures: []SpecialTreasure{},
 		MagicItems: []MagicItem{},
 		Combat: []CombatEncounter{},
@@ -200,7 +205,6 @@ func ParseandValidateMagicItems(form url.Values, e []string) ([]MagicItem, bool,
 		case "sold":
             v := val == "true"
 			tmap[index].IsSold = v
-
 		}
 	}
 
@@ -286,7 +290,8 @@ type PageAdventureCalculator struct {
 	errorTemplate string
 	adventures map[string]*Adventure
 	currentSystem string
-	renderer *Renderer
+	renderer *htmlRenderer
+	logger *slog.Logger
 	mu *sync.RWMutex
 
 }
@@ -321,36 +326,38 @@ func (a Adventure) MagicItemArrays() (av, sv []int, isSold []bool) {
 	return
 }
 
-func NewPageAdventureCalculator() *PageAdventureCalculator {
+func NewPageAdventureCalculator(r *htmlRenderer, l *slog.Logger) *PageAdventureCalculator {
 	return &PageAdventureCalculator{
 		templateName: "adventureCalculator.html",
 		formTemplateName: "calculatorForm.html",
 		errorTemplate: "calculatorError.html",
 		adventures: map[string]*Adventure{},
-		renderer: NewRenderer(),
+		renderer: r,
+		logger: l,
 		currentSystem: "ACKS II",
 		mu: &sync.RWMutex{},
 	}
 }
 
 func (p PageAdventureCalculator) RegisterRoutes(router *http.ServeMux) {
-	router.Handle("/tools/calculator", p.addAventureToContext(p.index((*p.renderer))))
-	router.Handle("PATCH /tools/calculator/shares", p.addAventureToContext(p.Shares(p.UpdateAdventureData(p.form(*p.renderer))) ))
-	router.Handle("PATCH /tools/calculator/coins", p.addAventureToContext(p.Coins(p.UpdateAdventureData(p.form(*p.renderer))) ))
+	router.Handle("/tools/calculator", p.addAventureToContext(p.index()))
+	router.Handle("PATCH /tools/calculator/shares", p.addAventureToContext(p.Shares(p.addAdventureUpdateEventHeaderToResponse(p.formSection("shares")))))
+	router.Handle("PATCH /tools/calculator/coins", p.addAventureToContext(p.Coins(p.addAdventureUpdateEventHeaderToResponse(p.formSection("coins"))) ))
 
-	router.Handle("POST /tools/calculator/special-treasure",p.addAventureToContext(p.AddSpecialTreasure(p.form(*p.renderer))))
-	router.Handle("PATCH /tools/calculator/special-treasure/{id}",p.addAventureToContext(p.UpdateSpecialTreasure(p.UpdateAdventureData(p.form(*p.renderer)))))
-	router.Handle("DELETE /tools/calculator/special-treasure/{id}",p.addAventureToContext(p.DeleteSpecialTreasure(p.UpdateAdventureData(p.form(*p.renderer)))))
+	router.Handle("POST /tools/calculator/special-treasure",p.addAventureToContext(p.AddSpecialTreasure(p.formSection("special-treasure"))))
+	router.Handle("PATCH /tools/calculator/special-treasure/{id}",p.addAventureToContext(p.UpdateSpecialTreasure(p.addAdventureUpdateEventHeaderToResponse(p.formSection("special-treasure")))))
+	router.Handle("DELETE /tools/calculator/special-treasure/{id}",p.addAventureToContext(p.DeleteSpecialTreasure(p.addAdventureUpdateEventHeaderToResponse(p.formSection("special-treasure")))))
 
-    router.Handle("POST /tools/calculator/combat",p.addAventureToContext(p.AddCombat(p.form(*p.renderer))))
-	router.Handle("PATCH /tools/calculator/combat/{id}",p.addAventureToContext(p.UpdateCombat(p.UpdateAdventureData(p.form(*p.renderer)))))
-	router.Handle("DELETE /calculator/combat/{id}",p.addAventureToContext(p.DeleteCombat(p.UpdateAdventureData(p.form(*p.renderer)))))
+    router.Handle("POST /tools/calculator/combat",p.addAventureToContext(p.AddCombat(p.formSection("combat"))))
+	router.Handle("PATCH /tools/calculator/combat/{id}",p.addAventureToContext(p.UpdateCombat(p.addAdventureUpdateEventHeaderToResponse(p.formSection("combat")))))
+	router.Handle("DELETE /calculator/combat/{id}",p.addAventureToContext(p.DeleteCombat(p.addAdventureUpdateEventHeaderToResponse(p.formSection("combat")))))
 
-    router.Handle("POST /tools/calculator/magic-item",p.addAventureToContext(p.AddMagicItem(p.form(*p.renderer))))
-	router.Handle("PATCH /tools/calculator/magic-item/{id}",p.addAventureToContext(p.UpdateMagicItem(p.UpdateAdventureData(p.form(*p.renderer)))))
-	router.Handle("DELETE /tools/calculator/magic-item/{id}",p.addAventureToContext(p.DeleteMagicItem(p.UpdateAdventureData(p.form(*p.renderer)))))
+    router.Handle("POST /tools/calculator/magic-item",p.addAventureToContext(p.AddMagicItem(p.formSection("magic-items"))))
+	router.Handle("PATCH /tools/calculator/magic-item/{id}",p.addAventureToContext(p.UpdateMagicItem(p.addAdventureUpdateEventHeaderToResponse(p.formSection("magic-items")))))
+	router.Handle("DELETE /tools/calculator/magic-item/{id}",p.addAventureToContext(p.DeleteMagicItem(p.addAdventureUpdateEventHeaderToResponse(p.formSection("magic-items")))))
 
-	router.Handle("/tools/calculator/summary", p.addAventureToContext(p.AdventureSummaryModal(*p.renderer)))
+	router.Handle("/tools/calculator/summary", p.addAventureToContext(p.AdventureSummaryModal()))
+	router.Handle("/tools/calculator/short-summary", p.addAventureToContext(p.UpdateAdventureData(p.formSection("shortsummary"))))
 
 
 }
@@ -359,12 +366,19 @@ func (p PageAdventureCalculator) addAventureToContext(next http.Handler) http.Ha
 	return http.HandlerFunc(func(w http.ResponseWriter, r* http.Request) {
 		session := getSessionFromCtx(r)
 		if p.adventures[session.Id] == nil {
-			p.adventures[session.Id] = &Adventure{}
+			p.adventures[session.Id] = NewAdventure()
 		}
 		a := p.adventures[session.Id]
 		ctx := context.WithValue(r.Context(), adventureKey, a)
 		next.ServeHTTP(w, r.WithContext(ctx))
 
+	})
+}
+
+func (p PageAdventureCalculator) addAdventureUpdateEventHeaderToResponse(next http.HandlerFunc) http.HandlerFunc {
+		return http.HandlerFunc(func(w http.ResponseWriter, r* http.Request) {
+			w.Header().Set("HX-Trigger", "adventureUpdate")
+			next.ServeHTTP(w, r)
 	})
 }
 
@@ -381,58 +395,96 @@ func (p *PageAdventureCalculator) CleanupSessionData(sessionId string) {
 	p.mu.Unlock()
 }
 
-func (p PageAdventureCalculator) index(pr Renderer) http.HandlerFunc {
+func (p PageAdventureCalculator) index() http.HandlerFunc {
 	return func(w http.ResponseWriter, r* http.Request) {
 		a := p.getAdventureFromContext(r)
-		renderedPage, err := pr.RenderPage(p.templateName, a)
+		err := p.renderer.render(w, 200, a, "base", "layouts/tool.html", "pages/adventureCalculator.html")
 		if err != nil {
-			log.Printf("Error rendering Index of Adventure Calculator: %v\n", err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
+			p.logger.Info("Error rendering initial Adventure Calculator page:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
 		}
-		w.Write([]byte(renderedPage))
 	}
 }
 
-func (p PageAdventureCalculator) form(pr Renderer) http.HandlerFunc {
+func (p PageAdventureCalculator) form() http.HandlerFunc {
 	return func(w http.ResponseWriter, r* http.Request) {
 		a := p.getAdventureFromContext(r)
-
-		renderedPage, err := pr.RenderPage(p.formTemplateName, a)
+		err := p.renderer.render(w, 200, a, "layouts:tool", "pages/adventureCalculator.html")
 		if err != nil {
-			log.Printf("Error rendering Form of Adventure Calculator: %v\n", err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
+			p.logger.Info("Error rendering form:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
 		}
-		w.Write([]byte(renderedPage))
 	}
 }
 
-func (p PageAdventureCalculator) renderForm(a Adventure, valid bool) http.HandlerFunc {
+func (p PageAdventureCalculator) formSection(section string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r* http.Request) {
-		if !valid {
-		renderedSnippet, err := p.renderer.RenderPage(p.errorTemplate, a)
-			if err != nil {
-				log.Printf("Error rendering Form of Adventure Calculator: %v\n", err)
-				w.Header().Add("hx-redirect", "/error")
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			w.Write([]byte(renderedSnippet))
-			return
-
-		}
-		renderedPage, err := p.renderer.RenderPage(p.formTemplateName, a)
+		a := p.getAdventureFromContext(r)
+		err := p.renderer.render(w, 200, a, "partial:adventure:form:"+section, "pages/adventureCalculator.html")
 		if err != nil {
-			log.Printf("Error rendering Form of Adventure Calculator: %v\n", err)
-			w.Header().Add("hx-redirect", "/error")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			p.logger.Info("Error rendering form:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
 		}
-		w.Write([]byte(renderedPage))
 	}
 }
 
+func (p PageAdventureCalculator) AdventureSummaryModal() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		a := p.getAdventureFromContext(r)
+
+		system, err := gamesystems.LoadGameSystem(p.currentSystem)
+		if err != nil {
+			p.logger.Info("Error loading game system for adventure summary:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
+		}
+		stn, stv := a.SpecialTreasureArrays()
+		cbn, cbv := a.CombatArrays()
+		mgav, mgsv, mgis := a.MagicItemArrays()
+		fs, hs := system.CalculateXPShares(a.TotalShares, a.Copper, a.Silver, a.Electrum, a.Gold, a.Platinum, stn, stv, cbn, cbv, mgav, mgsv, mgis)
+		fgs, hgs := system.CalculateGPShares(a.TotalShares, a.Copper, a.Silver, a.Electrum, a.Gold, a.Platinum, stn, stv, mgav, mgsv, mgis)
+		coins := system.CalculateDetailedCoinage(a.TotalShares, a.Copper, a.Silver, a.Electrum, a.Gold, a.Platinum)
+		pCoinValue := system.CalculateTotalGPFromCoinage(coins[0], coins[2], coins[4], coins[6], coins[8])
+		hCoinValue := system.CalculateTotalGPFromCoinage(coins[1], coins[3], coins[5], coins[7], coins[9])
+		pSTAmount, hSTAmount := system.CalculateGPSharesFromSpecialTreasure(stn, stv, a.TotalShares)
+		pMIAmount, hMIAmount := system.CalculateGPSharesFromMagicItems(mgav, mgsv, mgis, a.TotalShares)
+
+		summary := AdventureSummary {
+				PlayerCount: a.NumberOfPlayers,
+				HenchCount: a.NumberOfHenchmen,
+				Shares: a.TotalShares,
+				PlayerXP: fs,
+				HenchXP: hs,
+				PlayerGP: fgs,
+				HenchGP: hgs,
+				PCP: coins[0],
+				PSP: coins[2],
+				PEP: coins[4],
+				PGP: coins[6],
+				PPP: coins[8],
+				HCP: coins[1],
+				HSP: coins[3],
+				HEP: coins[5],
+				HGP: coins[7],
+				HPP: coins[9],
+				PlayerCoinValue: int(pCoinValue),
+				HenchCoinValue: int(hCoinValue),
+				PlayerSpecialTreasure: pSTAmount + pMIAmount,
+				HenchSpecialTreasure: hSTAmount + hMIAmount,
+				SpecialTreasures: a.SpecialTreasures,
+				MagicItems: a.MagicItems,
+		}
+		err = p.renderer.render(w, http.StatusOK, summary, "partial:adventure:summarymodal")
+		if err != nil {
+			p.logger.Info("Error rendering summary modal:")
+			p.logger.Error(err.Error())
+			http.Error(w, http.StatusText(500), 500)
+		}
+	}
+}
 
 func (p PageAdventureCalculator) Shares(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -724,56 +776,3 @@ func (p PageAdventureCalculator) UpdateAdventureData(next http.HandlerFunc) http
 	}
 }
 
-func (p PageAdventureCalculator) AdventureSummaryModal(pr Renderer) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		a := p.getAdventureFromContext(r)
-
-		system, err := gamesystems.LoadGameSystem(p.currentSystem)
-		if err != nil {
-			log.Printf("%v", err)
-		}
-		stn, stv := a.SpecialTreasureArrays()
-		cbn, cbv := a.CombatArrays()
-		mgav, mgsv, mgis := a.MagicItemArrays()
-		fs, hs := system.CalculateXPShares(a.TotalShares, a.Copper, a.Silver, a.Electrum, a.Gold, a.Platinum, stn, stv, cbn, cbv, mgav, mgsv, mgis)
-		fgs, hgs := system.CalculateGPShares(a.TotalShares, a.Copper, a.Silver, a.Electrum, a.Gold, a.Platinum, stn, stv, mgav, mgsv, mgis)
-		coins := system.CalculateDetailedCoinage(a.TotalShares, a.Copper, a.Silver, a.Electrum, a.Gold, a.Platinum)
-		pCoinValue := system.CalculateTotalGPFromCoinage(coins[0], coins[2], coins[4], coins[6], coins[8])
-		hCoinValue := system.CalculateTotalGPFromCoinage(coins[1], coins[3], coins[5], coins[7], coins[9])
-		pSTAmount, hSTAmount := system.CalculateGPSharesFromSpecialTreasure(stn, stv, a.TotalShares)
-		pMIAmount, hMIAmount := system.CalculateGPSharesFromMagicItems(mgav, mgsv, mgis, a.TotalShares)
-
-		summary := AdventureSummary {
-				PlayerCount: a.NumberOfPlayers,
-				HenchCount: a.NumberOfHenchmen,
-				Shares: a.TotalShares,
-				PlayerXP: fs,
-				HenchXP: hs,
-				PlayerGP: fgs,
-				HenchGP: hgs,
-				PCP: coins[0],
-				PSP: coins[2],
-				PEP: coins[4],
-				PGP: coins[6],
-				PPP: coins[8],
-				HCP: coins[1],
-				HSP: coins[3],
-				HEP: coins[5],
-				HGP: coins[7],
-				HPP: coins[9],
-				PlayerCoinValue: int(pCoinValue),
-				HenchCoinValue: int(hCoinValue),
-				PlayerSpecialTreasure: pSTAmount + pMIAmount,
-				HenchSpecialTreasure: hSTAmount + hMIAmount,
-				SpecialTreasures: a.SpecialTreasures,
-				MagicItems: a.MagicItems,
-		}
-		renderedPage, err := pr.RenderPage("adventureSummaryModal.html", summary)
-		if err != nil {
-			log.Printf("Error rendering Adventure Summary Modal: %v\n", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.Write([]byte(renderedPage))
-	}
-}

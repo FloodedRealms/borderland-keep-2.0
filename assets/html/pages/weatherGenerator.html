@@ -1,5 +1,19 @@
-<main id="weather">
-    <section id="weather-controls">
+<!--
+     The weather page use and older method of full page updates for it's HTMX interaction. While this is simpler to progam, it causes issues with more dynamic pages.
+     For now, we are just going to keep it the way it is. Perhaps a future update we will bring it in line with the newer method of using partials. But for now, I see now reason to do so.
+     - ShockTohp, 28-07-26
+-->
+
+{{ define "page:title"}}Borderland Keep - Adventure Calculator{{ end }}
+{{define "page:includes"}} <link rel="stylesheet" href="/static/css/ledger2.css"> {{ end }}
+
+
+{{ define "page:header-text" }}Weather Oracle{{end}}
+{{ define "page:header-subtext" }}Know what the sky potendeth!{{end}}
+
+
+{{ define "page:content" }}
+<section id="weather-controls">
         <p style="font-family: serif;">
             This page will generate monthly weather for ACKS II. You may use the server random number generator or supply your own dice rolls. The initial weather generated will always be for the Borderlands Region of the Auran empire in Summer (<b>Cfa</b> Climate, Easterly prevailing wind). If you would like have it auto-generate with different setting, simply bookmark the "quick-link" generated at the bottom of the controls section. If "Simulate weather system" is selected, the server will use method listed in the JJ for each day after the first. You may supply your own dice rolls if desired by selecting the "Manual" Generation mode. The "Foretell!" button re-rolls the entire month using the given parameters.
         </p>
@@ -95,4 +109,4 @@
         </div>
         {{ end }}
     </section>
-</main>
+{{end}}

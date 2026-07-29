@@ -1,0 +1,35 @@
+{{define "base"}}
+<!doctype html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>{{template "page:title" .}}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="/static/css/borderlandkeep.css">
+        <script defer src="/static/js/htmx.min.js"></script>
+        <script defer src="https://unpkg.com/hyperscript.org@0.9.14"></script>
+
+        {{ template "page:includes" }}
+    </head>
+    <body>
+        <header class="page-header">
+            <div class="banner">
+                <img src="/static/img/banner_image_1.png">
+                <div class="with-sub">
+                    <p>{{template "page:header-subtext"}}</p>
+                    <h1>{{template "page:header-text"}}</h1>
+                </div>
+            </div>
+            <nav class="navbar">
+                <a href="/">Home</a>
+                <a href="/about">About</a>
+                <a href="/tools/calculator">Adventure Calculator</a>
+                <a href="/tools/weather">Weather Generator</a>
+
+            </nav>
+        </header>
+            {{template "layout" .}}
+    </body>
+</html>
+{{end}}

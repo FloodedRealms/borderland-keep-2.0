@@ -1,0 +1,224 @@
+{{ define "partial:adventure:form:shares" }}
+<fieldset id="attendance">
+    <legend>
+        Attendance
+    </legend>
+    <ul>
+        <li class="md-card">
+            <label for="player-count" class="editor-label">Number of Players: </label> <input id="player-count" type="text" name="player-count" class="text-input"
+                                                                                              hx-trigger="change" hx-target="#attendance" hx-patch="/tools/calculator/shares" hx-swap="outerHTML"
+                                                                                              value="{{ .NumberOfPlayers }}" />
+        </li>
+        <li class="md-card">
+            <label for="hench-count" class="editor-label">Number of Henchmen </label> <input  id="hench-count" type="text" name="hench-count" class="text-input"
+                                                                                              hx-trigger="change" hx-target="#attendance" hx-patch="/tools/calculator/shares" hx-swap="outerHTML"
+                                                                                              value="{{ .NumberOfHenchmen}}"/>
+        </li>
+    </ul>
+</fieldset>
+{{ end }}
+
+{{ define "partial:adventure:form:coins" }}
+<fieldset id="coins">
+    <legend>
+        Coins
+    </legend>
+    <ul>
+        <li class="md-card">
+            <label for="copper" class="editor-label">Copper: </label> <input id="copper"  type="text" name="copper" class="text-input"
+                                                                             hx-trigger="change" hx-target="#coins" hx-patch="/tools/calculator/coins" hx-swap="outerHTML"
+                                                                             value="{{ .Copper}}" />
+        </li>
+        <li class="md-card">
+            <label for="silver" class="editor-label">Silver: </label> <input id="silver" type="text" name="silver" class="text-input"
+                                                                             hx-trigger="change" hx-target="#coins" hx-patch="/tools/calculator/coins" hx-swap="outerHTML"
+                                                                             value="{{ .Silver}}" />
+        </li>
+        <li class="md-card">
+            <label for="electrum" class="editor-label">Electrum: </label> <input id="electrum" type="text" name="electrum" class="text-input"
+                                                                                 hx-trigger="change" hx-target="#coins" hx-patch="/tools/calculator/coins" hx-swap="outerHTML"
+                                                                                 value="{{ .Electrum }}"/>
+        </li>
+        <li class="md-card">
+            <label for="gold" class="editor-label">Gold: </label> <input id="gold" type="text" name="gold" class="text-input"
+                                                                         hx-trigger="change" hx-target="#coins" hx-patch="/tools/calculator/coins" hx-swap="outerHTML"
+                                                                         value="{{ .Gold }}" />
+        </li>
+        <li class="md-card">
+            <label for="platinum" class="editor-label">Platinum: </label> <input id="platinum" type="text" name="platinum" class="text-input"
+                                                                                 hx-trigger="change" hx-target="#coins" hx-patch="/tools/calculator/coins" hx-swap="outerHTML"
+                                                                                 value="{{ .Platinum }}" />
+        </li>
+    </ul>
+</fieldset>
+{{ end }}
+
+{{ define "partial:adventure:form:special-treasure" }}
+<fieldset id="special-treasure">
+    <legend>
+        Special Treasure
+    </legend>
+    <ul>
+        {{ range $id, $treasure := .SpecialTreasures }}
+        <li class="item-card">
+            <label for="treasure-name-{{ $id }}" class="editor-label">Treasure Name: </label> <input id="treasure-name-{{ $id }}"  type="text" name="treasure-name-{{ $id }}" class="text-input"
+                                                                                                     hx-trigger="change" hx-target="#special-treasure" hx-patch="/tools/calculator/special-treasure/{{ $id }}" hx-swap="outerHTML"
+                                                                                                     value="{{ $treasure.Name }}" />
+            <label for="treasure-value-{{ $id }}"  class="editor-label">Treasure Value: </label> <input id="treasure-value-{{ $id }}"  type="text" name="treasure-value-{{ $id }}" class="text-input"
+                                                                                                        hx-trigger="change" hx-target="#special-treasure" hx-patch="/tools/calculator/special-treasure/{{ $id }}" hx-swap="outerHTML"
+                                                                                                        value="{{ $treasure.GPValue }}" />
+            <label for="treasure-collected-{{ $id }}"  class="editor-label">Treasure Collected: </label> <input id="treasure-collected-{{ $id }}"  type="text" name="treasure-collected-{{ $id }}" class="text-input" hx-swap="outerHTML"
+                                                                                                                hx-trigger="change" hx-target="#special-treasure" hx-patch="/tools/calculator/special-treasure/{{ $id }}"
+                                                                                                                value="{{ $treasure.Number }}" />
+            <button type="button" class="danger-button"
+                    hx-trigger="mousedown" hx-target="#special-treasure" hx-delete="/tools/calculator/special-treasure/{{ $id }}"> Delete</button>
+        </li>
+        {{ end }}
+        <button type="button" class="create-button"
+                hx-trigger="mousedown" hx-target="#special-treasure" hx-post="/tools/calculator/special-treasure" hx-swap="outerHTML">Add Special Treasure</button>
+    </ul>
+</fieldset>
+{{ end }}
+
+{{ define "partial:adventure:form:combat" }}
+<fieldset id="combat">
+    <legend>
+        Combat XP
+    </legend>
+    <ul>
+        {{ range $id, $combat := .Combat }}
+        <li class="item-card">
+            <label for="combat-name-{{ $id }}"  class="editor-label">Monster Name: </label> <input id="combat-name-{{ $id }}"  type="text" name="combat-name-{{ $id }}" class="text-input"
+                                                                                                   hx-trigger="change" hx-target="#combat" hx-patch="/tools/calculator/combat/{{ $id }}" hx-swap="outerHTML"
+                                                                                                   value="{{ $combat.Name }}" />
+            <label for="combat-value-{{ $id }}"  class="editor-label">XP Value: </label> <input id="combat-value-{{ $id }}"  type="text" name="combat-value-{{ $id }}" class="text-input" hx-swap="outerHTML"
+                                                                                                hx-trigger="change" hx-target="#combat" hx-patch="/tools/calculator/combat/{{ $id }}"
+                                                                                                value="{{ $combat.XPValue }}" />
+            <label for="combat-defeated-{{ $id }}"  class="editor-label">Number Defeated: </label> <input id="combat-defeated-{{ $id }}"  type="text" name="combat-defeated-{{ $id }}" class="text-input" hx-swap="outerHTML"
+                                                                                                          hx-trigger="change" hx-target="#combat" hx-patch="/tools/calculator/combat/{{ $id }}"
+                                                                                                          value="{{ $combat.NumberDefeated }}" />
+            <button type="button" class="danger-button"
+                    hx-trigger="mousedown" hx-target="#combat" hx-delete="/tools/calculator/combat/{{ $id }}" hx-swap="outerHTML"> Delete</button>
+        </li>
+        {{ end }}
+        <button type="button" class="create-button"
+                hx-trigger="mousedown" hx-target="#combat" hx-post="/tools/calculator/combat" hx-swap="outerHTML">Add Combat</button>
+    </ul>
+</fieldset>
+{{ end }}
+
+{{ define "partial:adventure:form:magic-items" }}
+<fieldset id="magic-items">
+    <legend>
+        Magic Items
+    </legend>
+    <ul>
+        {{ range $id, $item := .MagicItems }}
+        <li class="item-card">
+            <label for="mi-name-{{ $id }}" class="editor-label">Magic Item Name:</label> <input id="mi-name-{{ $id }}"  type="text" name="mi-name-{{ $id }}" class="text-input"
+                                                                                                hx-trigger="change" hx-target="#magic-items" hx-patch="/tools/calculator/magic-item/{{ $id }}" hx-swap="outerHTML"
+                                                                                                value="{{ $item.Name }}" />
+            <label for="mi-apparent-{{ $id }}" class="editor-label" >Apparent Value:</label> <input id="mi-apparent-value-{{ $id }}"  type="text" name="mi-apparent-value-{{ $id }}" class="text-input"
+                                                                                                    hx-trigger="change" hx-target="#magic-items" hx-patch="/tools/calculator/magic-item/{{ $id }}" hx-swap="outerHTML"
+                                                                                                    value="{{ $item.ApparentValue }}" />
+            <label for="mi-sold-{{ $id }}" class="editor-label">Sold without use?</label> <input id="mi-is-sold-{{ $id }}"  type="checkbox" name="mi-is-sold-{{ $id }}" class="checkbox-input" hx-swap="outerHTML"
+                                                                                                 hx-trigger="change" hx-target="#magic-items" hx-patch="/tools/calculator/magic-item/{{ $id }}"
+                                                                                                 value="true" {{ if eq $item.IsSold true }} checked {{ end }} />
+            <label for="mi-sell-{{ $id }}" class="editor-label">Sell Price:</label> <input id="mi-sell-value-{{ $id }}"  type="text" name="mi-sell-value-{{ $id }}" class="text-input" hx-swap="outerHTML"
+                                                                                           hx-trigger="change" hx-target="#magic-items" hx-patch="/tools/calculator/magic-item/{{ $id }}"
+                                                                                           value="{{ $item.SellValue }}" {{ if eq $item.IsSold false }} value=0 readonly {{ end }} />
+            <button type="button" class="danger-button"
+                    hx-trigger="mousedown" hx-target="#magic-items" hx-delete="/tools/calculator/magic-item/{{ $id }}" hx-swap="outerHTML"> Delete</button>
+        </li>
+        {{ end }}
+        <button type="button" class="create-button"
+                hx-trigger="mousedown" hx-target="#magic-items" hx-post="/tools/calculator/magic-item" hx-swap="outerHTML">Add Magic Item</button>
+    </ul>
+</fieldset>
+
+{{ end }}
+
+
+{{ define "partial:adventure:form:shortsummary" }}
+<div role="group" aria-labelledby="session-summary">
+    <span id="session-summary">Session Treasure Summary</span>
+    <dl>
+        <dt>Total Shares</dt>
+        <dd>{{ .TotalShares }}</dd>
+        <dt> Total Gold From Coins</dt>
+        <dd>{{ .TotalCoinGold }}</dd>
+
+        <dt>Total Gold Value<dt> w
+            <dd> {{ .TotalGPValue }}</dd>
+
+            <dt>Total XP Value<dt>
+                <dd> {{ .TotalXPValue }}</dd>
+                <dt>Player XP Share<dt>
+                    <dd> {{ .FullXPShare }}</dd>
+    </dl>
+    <button class="modal-open-button confirm-button"
+            hx-get="/tools/calculator/summary" hx-target="body" hx-swap="beforeend">Verily!</button>
+</div>
+{{ end }}
+
+
+{{ define "partial:adventure:summarymodal" }}
+<div id="summary-modal" _="on closeModal add .closing then wait for animationend then remove me">
+  <div class="modal-underlay" _="on click trigger closeModal"></div>
+  <div class="modal-content">
+    <h2 class="modal-title">Summary</h2>
+    <div class="modal-grid">
+      <pre id="summary-text">
+**Sesion # - Title**
+   Number of Players: {{ .PlayerCount }}
+   Number of Henchmen: {{ .HenchCount }}
+   Number of Shares: {{ .Shares }}
+
+**XP Share**
+   Player: {{ .PlayerXP }}
+   Henchmen: {{ .HenchXP }}
+
+**GP Share Value**
+   Player: {{ .PlayerGP }}
+   Henchmen: {{ .HenchGP }}
+
+**Coinage Break Down**
+   *Player - {{ .PlayerCoinValue }}:*
+       Copper: {{ .PCP }}
+       Silver: {{ .PSP }}
+       Electrum: {{ .PEP }}
+       Gold: {{ .PGP }}
+       Platinum:{{ .PPP }}
+   *Henchmen - {{ .HenchCoinValue }}:*
+       Copper: {{ .HCP }}
+       Silver: {{ .HSP }}
+       Electrum: {{ .HEP }}
+       Gold: {{ .HGP }}
+       Platinum:{{ .HPP }}
+
+   Player Special Treasure and Magic Item Share Value: {{ .PlayerSpecialTreasure }}
+   Henchmen Special Treasure Share and Magic Item Value (Unpaid Wages): {{ .HenchSpecialTreasure }}
+
+**Special Treasure**
+{{ range .SpecialTreasures }}
+   {{ .Number }} {{ .Name }}, {{ .GPValue }} GP each - {{ .TotalValue }} GP [Unclaimed]
+{{ end}}
+**Magic Items**
+ {{ range .MagicItems }}
+    {{ .Name }}, {{ .ApparentValue }} GP {{ if eq .IsSold true  }} [Sold] {{ .SellValue }} GP {{ else }} [Unclaimed] {{ end }}
+{{ end}}
+      </pre>
+    </div>
+    <div class="modal-actions">
+      <button class="copy-button"
+        _="on click call navigator.clipboard.writeText(#summary-text.innerText)
+           then set my.textContent to '✓ Copied!'
+           then wait 2s
+           then set my.textContent to 'Copy to Clipboard'">
+        Copy to Clipboard
+      </button>
+      <button class="modal-close-button danger-button" _="on click trigger closeModal">Close</button>
+    </div>
+  </div>
+</div>
+{{end}}
