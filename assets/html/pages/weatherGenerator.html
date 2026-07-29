@@ -1,0 +1,112 @@
+<!--
+     The weather page use and older method of full page updates for it's HTMX interaction. While this is simpler to progam, it causes issues with more dynamic pages.
+     For now, we are just going to keep it the way it is. Perhaps a future update we will bring it in line with the newer method of using partials. But for now, I see now reason to do so.
+     - ShockTohp, 28-07-26
+-->
+
+{{ define "page:title"}}Borderland Keep - Adventure Calculator{{ end }}
+{{define "page:includes"}} <link rel="stylesheet" href="/static/css/ledger2.css"> {{ end }}
+
+
+{{ define "page:header-text" }}Weather Oracle{{end}}
+{{ define "page:header-subtext" }}Know what the sky potendeth!{{end}}
+
+
+{{ define "page:content" }}
+<section id="weather-controls">
+        <p style="font-family: serif;">
+            This page will generate monthly weather for ACKS II. You may use the server random number generator or supply your own dice rolls. The initial weather generated will always be for the Borderlands Region of the Auran empire in Summer (<b>Cfa</b> Climate, Easterly prevailing wind). If you would like have it auto-generate with different setting, simply bookmark the "quick-link" generated at the bottom of the controls section. If "Simulate weather system" is selected, the server will use method listed in the JJ for each day after the first. You may supply your own dice rolls if desired by selecting the "Manual" Generation mode. The "Foretell!" button re-rolls the entire month using the given parameters.
+        </p>
+        <form>
+            <fieldset>
+                <legend>Parameters</legend>
+                <label for="generation-mode">Generation Mode</label>
+                <select name="generation-mode" id="generation-mode"
+                    hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/mode" >
+                    {{ range .ModeOptions }}
+                    <option value="{{ .Value }}" {{ if .Selected }} selected {{end}} >{{ .Text }}</option>
+                    {{ end }}
+                </select>
+                <label for="koppen-code">Koppen Code</label>
+                <select name="koppen-code" id="koppen-code"
+                        hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/code" >
+                    {{ range .KoppenCodeOptions }}
+                    <option value="{{ .Value }}" {{ if .Selected }} selected {{end}} >{{ .Text }}</option>
+                    {{ end }}
+                </select>
+                <label for="season">Season</label>
+                <select name="season" id="season"
+                        hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/season">
+                    {{ range .SeasonOptions }}
+                    <option value="{{ .Value }}" {{ if .Selected }} selected {{end}} >{{ .Text }}</option>
+                    {{ end }}
+                </select>
+                <label for="prevailing-wind" >Prevailing Wind</label>
+                <select name="prevailing-wind" id="prevailing-wind"
+                        hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/prevailing-wind">
+                    {{ range .WindOptions }}
+                    <option value="{{ .Value }}" {{ if .Selected }} selected {{end}} >{{ .Text }}</option>
+                    {{ end }}
+                </select>
+            </fieldset>
+            <fieldset>
+                <legend>Simulate Weather Front?</legend>
+                <input id="front-yes" type="radio" name="front" value="true" {{ if eq .SimulateFront true }} checked {{ end }}
+                        hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/front"/>
+                <label for="front-yes">Yes</label>
+                <input id="front-no" type="radio" name="front" value="false" {{if eq .SimulateFront false }} checked {{ end }}
+                        hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/front"/>
+                <label for="front-no">No</label>
+            </fieldset>
+        </form>
+
+        <div>Quick Link: https://borderlandkeep.com/tools/weather?code={{ .CurrentKoppenCode }}&season={{ .CurrentSeason }}&wind={{ .CurrentWind }}&front={{ .SimulateFront }}</div>
+
+
+        <div>
+        <button id="generate-weather-button" hx-put="/tools/weather" hx-trigger="mousedown" hx-target="#weather">Foretell!</button>
+        <a id="printer-version" href="/tools/printable-weather" class="drag-right" target="_blank" rel="noreferrer noopener">For ye printer!</a>
+        <button id="generate-markdown" class="modal-open-button drag-right" hx-get="/tools/weather/summary?format=markdown" hx-trigger="mousedown" hx-target="body" hx-swap="beforeend">For ye markdown!</button>
+        <button id="open-csv" class="modal-open-button drag-right" hx-get="/tools/weather/summary?format=csv" hx-trigger="mousedown" hx-target="body" hx-swap="beforeend">For ye spreadsheet!</button>
+        </div>
+
+    </section>
+    <section class="weather-grid">
+        {{ range $index, $weather := .WeatherResults }}
+        <div class="weather-entry">
+            <form class="roll-input">
+                <fieldset>
+                    <legend>Roll Values</legend>
+                    {{ range .UnmodifiedRolls }}
+                    <label for="{{ .Id }}-{{ $index }}">{{ .Name }} - {{ .DieNumber }}d{{ .DieFace }}</label>
+                    <input id="{{ .Id }}-{{ $index }}" type=text name="{{ .Id }}-{{ $index }}" {{ if eq $.CurrentMode "Automatic" }} readonly {{ end }} value="{{ .Result }}"
+                        hx-trigger="change" hx-target="#weather" hx-patch="/tools/weather/rolls" />
+                    {{ end }}
+                </fieldset>
+            </form>
+            <div class="modifiers">
+                <dl>
+                    {{ range .Modifiers }}
+                    <dd>{{ .Name }}:</dd>
+                    <dt>{{ .Value }}</dt>
+                    {{ end }}
+                </dl>
+            </div>
+            <div class="results">
+                <dl>
+                    <dd>Day Time Temperature:</dd>
+                    <dt>{{ .TemperatureDay }}</dt>
+                    <dd>Night Time Temperature:</dd>
+                    <dt>{{ .TemperatureNight }}</dt>
+                    <dd>Precipitation:</dd>
+                    <dt>{{ .Precipitation }}</dt>
+                    <dd>Wind Strength:</dd>
+                    <dt>{{ .Wind }}</dt>
+                    <dd>Wind Direction:</dd>
+                    <dt>{{ .WindDirection }}</dt>
+                </dl>
+            </div>
+        </div>
+        {{ end }}
+    </section>
+{{end}}

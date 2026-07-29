@@ -1,0 +1,24 @@
+{{ define "page:title"}}Borderland Keep - Adventure Calculator{{ end }}
+{{define "page:includes"}}
+        <link rel="stylesheet" href="/static/css/ledger2.css">
+{{ end }}
+
+
+{{ define "page:header-text" }}Adventure XP and Payment Calculator{{end}}
+{{ define "page:header-subtext" }}Pay yer men what they're owed!{{end}}
+
+
+{{ define "page:content" }}
+    <section class="editor-panel p-4" name="adventure-editor">
+            <form class="adventure-form" onsubmit="return false;">
+                {{ template "partial:adventure:form:shares" . }}
+                {{ template "partial:adventure:form:coins" . }}
+                {{ template "partial:adventure:form:special-treasure" . }}
+                {{ template "partial:adventure:form:combat" . }}
+                {{ template "partial:adventure:form:magic-items" . }}
+            </form>
+    </section>
+    <section id="results-panel" class="result-panel" hx-get="/tools/calculator/short-summary" hx-trigger="adventureUpdate from:body" hx-swap="innerHTML">
+        {{ template "partial:adventure:form:shortsummary" . }}
+    </section>
+{{end}}

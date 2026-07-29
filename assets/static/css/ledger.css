@@ -1,0 +1,606 @@
+/* ============================================================
+   Adventure XP & Payment Calculator — Tavern Ledger Theme
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=IM+Fell+English:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+
+/* --- Variables --- */
+:root {
+  --parchment-light: #f5ead2;
+  --parchment-mid:   #ede0be;
+  --parchment-dark:  #d4b483;
+  --parchment-shadow: #b8975a;
+  --ink:             #2b1d0e;
+  --ink-faded:       #5c4530;
+  --ink-light:       #7a5c3a;
+  --blood-red:       #7d2020;
+  --ink-red:         #931B1B;
+  --sea-green:       #2E8B57;
+  --green-ink:       #097969;
+  --gold:            #c9920a;
+  --gold-bright:     #e8b02a;
+  --vellum-border:   #9c7a3c;
+  --scroll-shadow:   rgba(43, 29, 14, 0.35);
+
+  --font-display:  'UnifrakturMaguntia', cursive;
+  --font-body:     'Crimson Pro', Georgia, serif;
+  --font-italic:   'IM Fell English', Georgia, serif;
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: #3a2510;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 60px,
+      rgba(0,0,0,0.04) 60px,
+      rgba(0,0,0,0.04) 61px
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--ink);
+  padding: 2rem 1.5rem;
+}
+
+/* --- Page Header --- */
+.page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  color: var(--gold-bright);
+  text-shadow:
+    2px 2px 0 #3a1a00,
+    0 0 24px rgba(232,176,42,0.4);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+.page-header p {
+  font-family: var(--font-italic);
+  font-style: italic;
+  color: var(--parchment-dark);
+  font-size: 1.1rem;
+  margin-top: 0.4rem;
+  opacity: 0.85;
+}
+
+/* --- Split Pane Layout --- */
+.split-pane-editor {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .split-pane-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Shared Panel Base (parchment scroll) --- */
+.editor-panel {
+    min-width: 700px;
+  height: calc(100vh - 4rem); /* or whatever fits your layout */
+  overflow-y: auto;
+}
+.editor-panel,
+.result-panel {
+  background-color: var(--parchment-light);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
+    linear-gradient(160deg, var(--parchment-light) 0%, var(--parchment-mid) 60%, var(--parchment-dark) 100%);
+  border: 2px solid var(--vellum-border);
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 30px rgba(180,140,80,0.2),
+    4px 6px 20px var(--scroll-shadow),
+    0 0 0 1px rgba(100,60,10,0.15);
+  padding: 1.8rem 2rem;
+  position: relative;
+}
+
+/* Decorative corner marks */
+.editor-panel::before,
+.editor-panel::after,
+.result-panel::before,
+.result-panel::after {
+  content: '✦';
+  position: absolute;
+  font-size: 0.9rem;
+  color: var(--gold);
+  opacity: 0.6;
+  line-height: 1;
+}
+.editor-panel::before,  .result-panel::before  { top:    0.5rem; left:  0.7rem; }
+.editor-panel::after,   .result-panel::after   { bottom: 0.5rem; right: 0.7rem; }
+
+/* --- Editor Panel Titles --- */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--blood-red);
+  text-align: center;
+  letter-spacing: 0.03em;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  margin-bottom: 0.2rem;
+}
+
+.section-subtitle {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--ink-light);
+  text-align: center;
+  margin-bottom: 1.4rem;
+}
+
+/* --- Fieldsets --- */
+.adventure-form fieldset {
+  border: none;
+  border-top: 1.5px solid var(--parchment-shadow);
+  padding: 1.1rem 0 0.6rem;
+  margin-bottom: 0.8rem;
+  position: relative;
+}
+
+.adventure-form fieldset + fieldset {
+  border-top: 1.5px dashed var(--parchment-shadow);
+}
+
+.adventure-form legend {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--gold);
+  padding: 0 0.6rem;
+  letter-spacing: 0.06em;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+}
+
+/* --- Lists inside fieldsets --- */
+.adventure-form ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* --- Cards --- */
+.md-card,
+.item-card {
+  background: rgba(255, 248, 230, 0.55);
+  border: 1px solid rgba(156, 122, 60, 0.35);
+  border-radius: 2px;
+  padding: 0.55rem 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+  box-shadow: inset 0 1px 3px rgba(180,140,80,0.12);
+}
+
+/* --- Labels --- */
+.editor-label {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--ink-faded);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* --- Text Inputs --- */
+.text-input {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: rgba(255, 252, 240, 0.8);
+  border: 1px solid var(--parchment-shadow);
+  border-radius: 1px;
+  padding: 0.28rem 0.55rem;
+  min-width: 80px;
+  max-width: 180px;
+  box-shadow: inset 0 1px 3px rgba(100,60,10,0.1);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow:
+    inset 0 1px 3px rgba(100,60,10,0.1),
+    0 0 0 2px rgba(201,146,10,0.2);
+}
+
+.text-input[readonly] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Checkbox --- */
+.checkbox-input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--blood-red);
+  cursor: pointer;
+}
+
+/* --- Buttons --- */
+.create-button,
+.delete-button {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 0.88rem;
+  border-radius: 1px;
+  border: 1px solid;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  letter-spacing: 0.03em;
+}
+
+.create-button {
+  background: var(--ink);
+  color: var(--gold-bright);
+  border-color: var(--gold);
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  margin-top: 0.3rem;
+  align-self: flex-start;
+}
+
+.create-button:hover {
+  background: var(--ink-faded);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+
+.create-button:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+.delete-button {
+  background: transparent;
+  color: var(--blood-red);
+  border-color: var(--blood-red);
+  margin-left: auto;
+}
+
+.delete-button:hover {
+  background: var(--blood-red);
+  color: var(--parchment-light);
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+  transform: translateY(-1px);
+}
+
+.delete-button:active {
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   Results Panel
+   ============================================================ */
+
+.result-panel {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.result-panel [role="group"] {
+  margin-bottom: 1.4rem;
+}
+
+/* Summary heading */
+#session-summary {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--blood-red);
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1.5px solid var(--parchment-shadow);
+}
+
+/* Definition list */
+.result-panel dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 0.5rem;
+  column-gap: 1rem;
+  align-items: baseline;
+}
+
+.result-panel dt {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--ink-faded);
+}
+
+.result-panel dd {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--ink);
+  text-align: right;
+}
+
+/* Divider lines between dl rows */
+.result-panel dt:not(:first-child),
+.result-panel dd:not(:first-child) {
+  padding-top: 0.35rem;
+  border-top: 1px dotted rgba(156,122,60,0.4);
+}
+
+/* Errors section */
+.result-panel > div:last-child > span {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--blood-red);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+.result-panel > div:last-child ul {
+  list-style: none;
+  padding: 0;
+}
+
+.result-panel > div:last-child li {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--blood-red);
+  padding: 0.25rem 0.4rem;
+  background: rgba(125,32,32,0.08);
+  border-left: 2px solid var(--blood-red);
+  margin-bottom: 0.35rem;
+}
+
+/* ============================================================
+   Scrollbar styling (Webkit)
+   ============================================================ */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--parchment-mid); }
+::-webkit-scrollbar-thumb {
+  background: var(--vellum-border);
+  border-radius: 2px;
+}
+
+/* --- Modal open button (top-right of summary panel) --- */
+.modal-open-button {
+  position: absolute;
+  bottom: 0;
+  right: 50%;
+  font-style: italic;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.04em;
+
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-open-button:hover {
+  background: var(--green-ink);
+  color: var(--ink);
+  border-color: var(--gold);
+}
+
+/* --- Modal overlay (hyperscript version) --- */
+#summary-modal {
+  position: fixed;
+  top:0px;
+	bottom: 0px;
+	left:0px;
+	right:0px;
+  z-index:1000;
+  	 /*Animate when opening*/
+	animation-name: fadeIn;
+	animation-duration:150ms;
+	animation-timing-function: ease;
+}
+
+#summary-modal.open {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes closing {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.97); }
+}
+
+#summary-modal.closing .modal-content {
+  animation: closing 0.18s ease-in forwards;
+}
+
+.modal-underlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 10, 0, 0.72);
+  z-index: -1;
+}
+
+/* --- Modal content box --- */
+.modal-content {
+  background-color: var(--parchment-light);
+  background-image:
+    url("data:image/svg+xml,..."), /* same texture as your panels */
+    linear-gradient(160deg, var(--parchment-light) 0%, var(--parchment-mid) 60%, var(--parchment-dark) 100%);
+  border: 2px solid var(--vellum-border);
+  border-radius: 2px;
+  padding: 2rem 2.4rem;
+  box-shadow: inset 0 0 30px rgba(180,140,80,0.2), 6px 10px 32px rgba(43,29,14,0.55);
+  width: 90vw;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+}
+
+/* Corner marks */
+.modal-content::before { content: '✦'; position: absolute; top: 0.5rem; left: 0.7rem; color: var(--gold); opacity: 0.6; font-size: 0.9rem; }
+.modal-content::after  { content: '✦'; position: absolute; bottom: 0.5rem; right: 0.7rem; color: var(--gold); opacity: 0.6; font-size: 0.9rem; }
+
+/* --- Pre block --- */
+.modal-grid pre {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: rgba(255, 248, 230, 0.6);
+  border: 1px solid rgba(156, 122, 60, 0.35);
+  border-radius: 1px;
+  padding: 1rem 1.1rem;
+
+  white-space: pre;       /* preserves all whitespace and line breaks exactly */
+  overflow-x: auto;       /* horizontal scroll for long lines instead of wrapping */
+  overflow-y: auto;
+  max-height: 55vh;       /* scrolls vertically before the modal itself grows */
+
+  /* thin parchment-toned scrollbars */
+  scrollbar-width: thin;
+  scrollbar-color: var(--vellum-border) transparent;
+}
+
+/* --- Copy button --- */
+.copy-button {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--gold-bright);
+  background: var(--ink);
+  border: 1px solid var(--gold);
+  border-radius: 1px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  align-self: flex-start;
+}
+
+.copy-button:hover {
+  background: var(--ink-faded);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+
+.copy-button:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+
+.modal-close-button {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink-light);
+  background-color: var(--red-ink);
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  transition: color 0.15s;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+
+}
+
+.modal-close-button:hover {
+  background: var(--blood-red);
+  box-shadow: 3xp 3px 0 black;
+  color: var(--ink);
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--blood-red);
+  text-align: center;
+  letter-spacing: 0.03em;
+  margin-bottom: 1.4rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1.5px solid var(--parchment-shadow);
+}
+
+
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+/* --- Confirm button (green) --- */
+.confirm-button {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: #d4edda;
+  background: #2a5c35;
+  border: 1px solid #4a8c5c;
+  border-radius: 1px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+
+.confirm-button:hover {
+  background: #3a7a48;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+
+.confirm-button:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+/* --- Delete / danger button (red) --- */
+.danger-button {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: #f5d5d5;
+  background: var(--blood-red);
+  border: 1px solid #a83030;
+  border-radius: 1px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+
+.danger-button:hover {
+  background: #a83030;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+
+.danger-button:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}

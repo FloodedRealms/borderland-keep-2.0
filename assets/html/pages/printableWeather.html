@@ -1,0 +1,52 @@
+
+{{ define "page:title"}}The Printable Weather{{ end }}
+{{define "page:includes"}}
+        <link rel="stylesheet" href="/static/css/printable.css">
+{{ end }}
+
+
+{{ define "page:header-text" }}Weather Printer{{end}}
+{{ define "page:header-subtext" }}Print what the sky portendeth!{{end}}
+
+
+{{ define "page:content" }}
+        {{ if eq .Valid true }}
+        <div class="printable-section">
+            <div class="printable-weather-header">
+                <span> Koppen Code: {{ .Koppen }} </span>
+                <span> Season: {{ .Season }} </span>
+                <span> Prevailing Wind: {{ .PrevailingWind }} </span>
+            </div>
+            <div class="printable-weather-cells">
+                {{ range .Weather }}
+                <div class="printable-weather-cell">
+                    <dl>
+                        <dd>
+                            Day Temperature:
+                        </dd>
+                        <dt>{{ .TemperatureDay }}</dt>
+                        <dd>
+                            Night Temperature:
+                        </dd>
+                        <dt>{{ .TemperatureNight }}</dt>
+                        <dd>
+                            Preciptiation:
+                        </dd>
+                        <dt>{{ .Precipitation }}</dt>
+                        <dd>
+                            Wind Strength:
+                        </dd>
+                        <dt>{{ .Wind }}</dt>
+                        <dd>
+                            Wind Direction:
+                        </dd>
+                        <dt>{{ .WindDirection }}</dt>
+                    </dl>
+                </div>
+                {{ end }}
+            </div>
+        </div>
+        {{ else }}
+        {{ .Error }}
+        {{ end }}
+{{end}}
